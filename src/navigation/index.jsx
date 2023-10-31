@@ -4,7 +4,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 const Stack = createNativeStackNavigator();
 
-//import screen page show
+//import screen splash
 import Splash from '../screens/splash/Index';
 
 //import BottomTabsNavigation
@@ -19,15 +19,23 @@ import ProductShow from '../screens/products/Show';
 //import screen page show
 import PageShow from '../screens/pages/Show';
 
+//import screen login
+import Login from '../screens/login/Index';
+
 export default function Navigation() {
   return (
-    <NavigationContainer >
+    <NavigationContainer>
       <Stack.Navigator initialRouteName="Splash">
-      <Stack.Screen
-        name="Splash"
-        component={Splash}
-        options={{headerShown: false}}
-      />
+        <Stack.Screen
+          name="Splash"
+          component={Splash}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{headerShown: false}}
+        />
         <Stack.Screen
           name="HomeScreen"
           component={BottomTabsNavigation}
