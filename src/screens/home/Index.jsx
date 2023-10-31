@@ -25,12 +25,6 @@ import Loading from '../../components/Loading';
 //import component slider
 import Slider from '../../components/Slider';
 
-//import material icons
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
-//import component list product home
-import ListProductHome from '../../components/ListProductHome';
-
 //import component list post
 import ListPost from '../../components/ListPost';
 
@@ -38,10 +32,6 @@ export default function HomeScreen() {
   //init state sliders
   const [loadingSliders, setLoadingSliders] = useState(true);
   const [sliders, setSliders] = useState([]);
-
-  //init state products
-  const [loadingProducts, setLoadingProducts] = useState(true);
-  const [products, setProducts] = useState([]);
 
   //init state posts
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -58,20 +48,6 @@ export default function HomeScreen() {
 
       //set loading false
       setLoadingSliders(false);
-    });
-  };
-
-  //method fetchDataProducts
-  const fetchDataProducts = async () => {
-    //set loading true
-    setLoadingProducts(true);
-
-    await Api.get('/api/public/products_home').then(response => {
-      //assign data to state
-      setProducts(response.data.data);
-
-      //set loading false
-      setLoadingProducts(false);
     });
   };
 
@@ -93,9 +69,6 @@ export default function HomeScreen() {
   useEffect(() => {
     //call method "fetchDataSliders"
     fetchDataSliders();
-
-    //call method "fetchDataProducts"
-    fetchDataProducts();
 
     //call method "fetchDataPosts"
     fetchDataPosts();
@@ -141,40 +114,13 @@ export default function HomeScreen() {
 
         {/* products */}
         <View style={styles.productContainer}>
-          <MaterialCommunityIcons
-            name="basket"
-            style={styles.productIcon}
-            size={20}
-          />
-          <Text style={styles.productText}>PRODUK DESA</Text>
+          <Text style={styles.productText}>MAIN MENU</Text>
         </View>
-        <View>
-          {loadingProducts ? (
-            <Loading />
-          ) : (
-            <ScrollView showsHorizontalScrollIndicator={false}>
-              <FlatList
-                style={{marginTop: 10}}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                data={products}
-                renderItem={({item, index, separators}) => (
-                  <ListProductHome data={item} index={index} />
-                )}
-                eyExtractor={item => item.id}
-                scrollEnabled={true}
-              />
-            </ScrollView>
-          )}
-        </View>
+
+        {/* Menu */}
 
         {/* posts / berita */}
         <View style={styles.postContainer}>
-          <MaterialCommunityIcons
-            name="newspaper-variant-multiple"
-            style={styles.postIcon}
-            size={20}
-          />
           <Text style={styles.postText}>BERITA TERBARU</Text>
         </View>
         <View>
