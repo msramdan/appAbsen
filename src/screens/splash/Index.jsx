@@ -17,10 +17,9 @@ const SplashScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={require('../../assets/images/logo-jbg.png')}
+        source={require('../../assets/images/logo.png')}
         style={styles.logo}
       />
-      <Text style={styles.appName}>Attendance Hexamatics</Text>
     </View>
   );
 };
@@ -32,14 +31,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   logo: {
-    width: 150,
-    height: 150,
+    width: 200,
+    height: 200,
     resizeMode: 'contain',
-  },
-  appName: {
-    marginTop: 20,
-    fontSize: 20,
-    fontWeight: 'bold',
   },
 });
 
