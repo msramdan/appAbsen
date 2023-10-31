@@ -10,12 +10,11 @@ import Home from '../screens/home/Index';
 //import screens Posts
 import Posts from '../screens/posts/Index';
 
-//import screens products
-import Products from '../screens/products/Index';
+//import screens employee
+import Employee from '../screens/employee/Index';
 
-//import screens Events
-import Photos from '../screens/photos/Index';
-import TopTabsNavigation from './TopTabNavigator';
+//import screens profile
+import Profile from '../screens/profile/Index';
 
 //import TopTabsNavigation
 export default function BottomTabsNavigation() {
@@ -48,14 +47,14 @@ export default function BottomTabsNavigation() {
         }}
       />
       <Tab.Screen
-        name="Products"
-        component={Products}
+        name="Employee"
+        component={Employee}
         options={{
           tabBarShowLabel: false,
           tabBarIcon: ({focused}) => (
             <View style={styles.tabBarIconCenter}>
               <Image
-                source={require('../assets/icons/shopping-basket.png')}
+                source={require('../assets/icons/users.png')}
                 resizeMode="contain"
                 style={
                   focused
@@ -71,28 +70,6 @@ export default function BottomTabsNavigation() {
           ),
         }}
       />
-
-      {/* <Tab.Screen
-        name="Info"
-        component={TopTabsNavigation}
-        options={{
-          tabBarShowLabel: false,
-          tabBarIcon: ({focused}) => (
-            <View
-              style={
-                focused
-                  ? styles.tabBarIconInfoCenterActive
-                  : styles.tabBarIconInfoCenter
-              }>
-              <Image
-                source={require('../assets/icons/info.png')}
-                resizeMode="contain"
-                style={styles.tabBarIconInfo}
-              />
-            </View>
-          ),
-        }}
-      /> */}
 
       <Tab.Screen
         name="Posts"
@@ -119,14 +96,14 @@ export default function BottomTabsNavigation() {
         }}
       />
       <Tab.Screen
-        name="Photos"
-        component={Photos}
+        name="Profile"
+        component={Profile}
         options={{
           tabBarShowLabel: false,
           tabBarIcon: ({focused}) => (
             <View style={styles.tabBarIconCenter}>
               <Image
-                source={require('../assets/icons/images.png')}
+                source={require('../assets/icons/user.png')}
                 resizeMode="contain"
                 style={
                   focused
@@ -187,7 +164,7 @@ const styles = StyleSheet.create({
     width: 65,
     height: 65,
     borderRadius: 35,
-    backgroundColor: 'green',
+    backgroundColor: '#3498db',
   },
 
   tabBarIconInfo: {
@@ -211,7 +188,7 @@ const styles = StyleSheet.create({
   tabBarIconImageActive: {
     width: 23,
     height: 23,
-    tintColor: 'green',
+    tintColor: '#3498db',
   },
 
   tabBarText: {
@@ -222,7 +199,7 @@ const styles = StyleSheet.create({
   },
 
   tabBarTextActive: {
-    color: 'green',
+    color: '#3498db',
     fontSize: 9,
     top: 3,
     fontWeight: 'bold',

@@ -13,6 +13,9 @@ import React, {useState, useEffect} from 'react';
 //import carousel
 import Carousel from 'react-native-snap-carousel';
 
+//import material icons
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
 //import dimensions
 import {windowWidth} from '../../utils/Dimensions';
 
@@ -82,12 +85,12 @@ export default function HomeScreen() {
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTextColor}>Selamat Datang</Text>
             <Text style={styles.headerTextTwoColor}>
-              Desa Santri, Kab. Jombang
+              Muhammad Saeful Ramdan
             </Text>
           </View>
           <View style={styles.headerImageContainer}>
             <Image
-              source={require('../../assets/images/logo-jbg.png')}
+              source={require('../../assets/images/icon.png')}
               style={styles.headerLogo}
             />
           </View>
@@ -111,8 +114,6 @@ export default function HomeScreen() {
             />
           )}
         </View>
-
-        {/* products */}
         <View style={styles.productContainer}>
           <Text style={styles.productText}>MAIN MENU</Text>
         </View>
@@ -121,9 +122,14 @@ export default function HomeScreen() {
 
         {/* posts / berita */}
         <View style={styles.postContainer}>
+          <MaterialCommunityIcons
+            name="newspaper-variant-multiple"
+            style={styles.postIcon}
+            size={20}
+          />
           <Text style={styles.postText}>BERITA TERBARU</Text>
         </View>
-        <View>
+        <View style={{flex: 1, flexDirection: 'row'}}>
           {loadingPosts ? (
             <Loading />
           ) : (
@@ -147,7 +153,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: 'green',
+    backgroundColor: '#3498db',
     padding: 20,
   },
 
@@ -180,7 +186,7 @@ const styles = StyleSheet.create({
   },
 
   headerBorderBottom: {
-    backgroundColor: 'orange',
+    backgroundColor: '#104994',
     padding: 3,
   },
 
