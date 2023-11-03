@@ -1,14 +1,15 @@
 import {
-  View,
-  Text,
-  SafeAreaView,
-  ScrollView,
-  Image,
-  FlatList,
-  StyleSheet,
+    View,
+    Text,
+    SafeAreaView,
+    ScrollView,
+    Image,
+    FlatList,
+    StyleSheet,
+    BackHandler,
 } from 'react-native';
 
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 
 //import carousel
 import Carousel from 'react-native-snap-carousel';
@@ -17,7 +18,7 @@ import Carousel from 'react-native-snap-carousel';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 //import dimensions
-import {windowWidth} from '../../utils/Dimensions';
+import { windowWidth } from '../../utils/Dimensions';
 
 //import api services
 import Api from '../../services/Api';
@@ -30,197 +31,215 @@ import Slider from '../../components/Slider';
 
 //import component list post
 import ListPost from '../../components/ListPost';
+import { useIsFocused } from '@react-navigation/native';
 
 export default function HomeScreen() {
-  //init state sliders
-  const [loadingSliders, setLoadingSliders] = useState(true);
-  const [sliders, setSliders] = useState([]);
+    //init state sliders
+    const [loadingSliders, setLoadingSliders] = useState(true);
+    const [sliders, setSliders] = useState([]);
 
-  //init state posts
-  const [loadingPosts, setLoadingPosts] = useState(true);
-  const [posts, setPosts] = useState([]);
+    //init state posts
+    const [loadingPosts, setLoadingPosts] = useState(true);
+    const [posts, setPosts] = useState([]);
+    const isFocused = useIsFocused()
 
-  //method fetchDataSliders
-  const fetchDataSliders = async () => {
-    //set loading true
-    setLoadingSliders(true);
+    //method fetchDataSliders
+    const fetchDataSliders = async () => {
+        //set loading true
+        setLoadingSliders(true);
 
-    await Api.get('/api/public/sliders').then(response => {
-      //assign data to state
-      setSliders(response.data.data);
+        await Api.get('/api/public/sliders').then(response => {
+            //assign data to state
+            setSliders(response.data.data);
 
-      //set loading false
-      setLoadingSliders(false);
-    });
-  };
+            //set loading false
+            setLoadingSliders(false);
+        });
+    };
 
-  //method fetchDataPosts
-  const fetchDataPosts = async () => {
-    //set loading true
-    setLoadingPosts(true);
+    //method fetchDataPosts
+    const fetchDataPosts = async () => {
+        //set loading true
+        setLoadingPosts(true);
 
-    await Api.get('/api/public/posts_home').then(response => {
-      //assign data to state
-      setPosts(response.data.data);
+        await Api.get('/api/public/posts_home').then(response => {
+            //assign data to state
+            setPosts(response.data.data);
 
-      //set loading false
-      setLoadingPosts(false);
-    });
-  };
+            //set loading false
+            setLoadingPosts(false);
+        });
+    };
 
-  //hook useEffect
-  useEffect(() => {
-    //call method "fetchDataSliders"
-    fetchDataSliders();
+    //hook useEffect
+    useEffect(() => {
+        //call method "fetchDataSliders"
+        fetchDataSliders();
 
-    //call method "fetchDataPosts"
-    fetchDataPosts();
-  }, []);
+        //call method "fetchDataPosts"
+        fetchDataPosts();
+    }, []);
 
-  return (
-    <SafeAreaView>
-      {/* header */}
-      <View style={styles.header}>
-        <View style={styles.headerContainer}>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.headerTextColor}>Selamat Datang</Text>
-            <Text style={styles.headerTextTwoColor}>
-              Muhammad Saeful Ramdan
-            </Text>
-          </View>
-          <View style={styles.headerImageContainer}>
-            <Image
-              source={require('../../assets/images/icon.png')}
-              style={styles.headerLogo}
-            />
-          </View>
-        </View>
-      </View>
-      <View style={styles.headerBorderBottom}></View>
-      <ScrollView style={{padding: 15}}>
-        {/* carousel */}
-        <View style={styles.sliderContainer}>
-          {loadingSliders ? (
-            <Loading />
-          ) : (
-            <Carousel
-              data={sliders}
-              renderItem={({item, index, separators}) => (
-                <Slider data={item} index={index} />
-              )}
-              sliderWidth={windowWidth - 30}
-              itemWidth={300}
-              loop={true}
-            />
-          )}
-        </View>
-        <View style={styles.productContainer}>
-          <Text style={styles.productText}>MAIN MENU</Text>
-        </View>
+    /**
+     * Prevent Back Button
+     * 
+     */
+    useEffect(() => {
+        if (isFocused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                return () => { };
+            })
 
-        {/* Menu */}
+            return () => backHandler.remove()
+        } else {
+            return () => { }
+        }
+    }, [])
 
-        {/* posts / berita */}
-        <View style={styles.postContainer}>
-          <MaterialCommunityIcons
-            name="newspaper-variant-multiple"
-            style={styles.postIcon}
-            size={20}
-          />
-          <Text style={styles.postText}>BERITA TERBARU</Text>
-        </View>
-        <View style={{flex: 1, flexDirection: 'row'}}>
-          {loadingPosts ? (
-            <Loading />
-          ) : (
-            <>
-              <FlatList
-                style={{flex: 1, marginTop: 10, marginBottom: 260}}
-                data={posts}
-                renderItem={({item, index, separators}) => (
-                  <ListPost data={item} index={index} />
-                )}
-                eyExtractor={item => item.id}
-                scrollEnabled={false}
-              />
-            </>
-          )}
-        </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
+    return (
+        <SafeAreaView>
+            {/* header */}
+            <View style={styles.header}>
+                <View style={styles.headerContainer}>
+                    <View style={styles.headerTextContainer}>
+                        <Text style={styles.headerTextColor}>Selamat Datang</Text>
+                        <Text style={styles.headerTextTwoColor}>
+                            Muhammad Saeful Ramdan
+                        </Text>
+                    </View>
+                    <View style={styles.headerImageContainer}>
+                        <Image
+                            source={require('../../assets/images/icon.png')}
+                            style={styles.headerLogo}
+                        />
+                    </View>
+                </View>
+            </View>
+            <View style={styles.headerBorderBottom}></View>
+            <ScrollView style={{ padding: 15 }}>
+                {/* carousel */}
+                <View style={styles.sliderContainer}>
+                    {loadingSliders ? (
+                        <Loading />
+                    ) : (
+                        <Carousel
+                            data={sliders}
+                            renderItem={({ item, index, separators }) => (
+                                <Slider data={item} index={index} />
+                            )}
+                            sliderWidth={windowWidth - 30}
+                            itemWidth={300}
+                            loop={true}
+                        />
+                    )}
+                </View>
+                <View style={styles.productContainer}>
+                    <Text style={styles.productText}>MAIN MENU</Text>
+                </View>
+
+                {/* Menu */}
+
+                {/* posts / berita */}
+                <View style={styles.postContainer}>
+                    <MaterialCommunityIcons
+                        name="newspaper-variant-multiple"
+                        style={styles.postIcon}
+                        size={20}
+                    />
+                    <Text style={styles.postText}>BERITA TERBARU</Text>
+                </View>
+                <View style={{ flex: 1, flexDirection: 'row' }}>
+                    {loadingPosts ? (
+                        <Loading />
+                    ) : (
+                        <>
+                            <FlatList
+                                style={{ flex: 1, marginTop: 10, marginBottom: 260 }}
+                                data={posts}
+                                renderItem={({ item, index, separators }) => (
+                                    <ListPost data={item} index={index} />
+                                )}
+                                eyExtractor={item => item.id}
+                                scrollEnabled={false}
+                            />
+                        </>
+                    )}
+                </View>
+            </ScrollView>
+        </SafeAreaView>
+    );
 }
 
 const styles = StyleSheet.create({
-  header: {
-    backgroundColor: '#3498db',
-    padding: 20,
-  },
+    header: {
+        backgroundColor: '#3498db',
+        padding: 20,
+    },
 
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
 
-  headerTextContainer: {
-    marginTop: 5,
-  },
+    headerTextContainer: {
+        marginTop: 5,
+    },
 
-  headerTextColor: {
-    color: 'white',
-  },
+    headerTextColor: {
+        color: 'white',
+    },
 
-  headerTextTwoColor: {
-    color: 'white',
-    fontSize: 18,
-  },
+    headerTextTwoColor: {
+        color: 'white',
+        fontSize: 18,
+    },
 
-  headerImageContainer: {
-    alignContent: 'center',
-    alignItems: 'center',
-  },
+    headerImageContainer: {
+        alignContent: 'center',
+        alignItems: 'center',
+    },
 
-  headerLogo: {
-    width: 60,
-    height: 60,
-  },
+    headerLogo: {
+        width: 60,
+        height: 60,
+    },
 
-  headerBorderBottom: {
-    backgroundColor: '#104994',
-    padding: 3,
-  },
+    headerBorderBottom: {
+        backgroundColor: '#104994',
+        padding: 3,
+    },
 
-  sliderContainer: {
-    marginTop: 15,
-  },
+    sliderContainer: {
+        marginTop: 15,
+    },
 
-  productContainer: {
-    marginTop: 30,
-    flexDirection: 'row',
-  },
+    productContainer: {
+        marginTop: 30,
+        flexDirection: 'row',
+    },
 
-  productIcon: {
-    marginRight: 5,
-    color: '#333333',
-  },
+    productIcon: {
+        marginRight: 5,
+        color: '#333333',
+    },
 
-  productText: {
-    color: '#333333',
-    fontWeight: 'bold',
-  },
+    productText: {
+        color: '#333333',
+        fontWeight: 'bold',
+    },
 
-  postContainer: {
-    marginTop: 30,
-    flexDirection: 'row',
-  },
+    postContainer: {
+        marginTop: 30,
+        flexDirection: 'row',
+    },
 
-  postIcon: {
-    marginRight: 5,
-    color: '#333333',
-  },
+    postIcon: {
+        marginRight: 5,
+        color: '#333333',
+    },
 
-  postText: {
-    color: '#333333',
-    fontWeight: 'bold',
-  },
+    postText: {
+        color: '#333333',
+        fontWeight: 'bold',
+    },
 });
