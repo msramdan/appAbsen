@@ -14,6 +14,7 @@ import Loading from '../../components/Loading';
 import ListEmployee from '../../components/ListEmployee';
 import Axios from '../../utils/Axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Redirect } from '../../utils/Redirect';
 
 export default function EmployeeScreen({ navigation }) {
     const [employees, setEmployees] = useState([]);
@@ -41,7 +42,7 @@ export default function EmployeeScreen({ navigation }) {
                 setLoadingPosts(false);
             }).catch((err) => {
                 if (err.response.status == 401) {
-                    navigation.navigate('Login')
+                    Redirect.toLoginScreen(navigation)
                 }
             });
     };
