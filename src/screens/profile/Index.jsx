@@ -42,6 +42,11 @@ export default function Photoscreen({ navigation }) {
             })
     }
 
+    const doLogout = () => {
+        AsyncStorage.removeItem('apiToken')
+        navigation.navigate('Login')
+    }
+
     return (
         <View style={styles.page}>
             {
@@ -79,7 +84,7 @@ export default function Photoscreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.containerMenu}
-                    onPress={() => onSubmit()}>
+                    onPress={() => doLogout()}>
                     <View style={styles.menu}>
                         <Icon name="sign-out" size={30} color="#3498db" />
                         <Text style={styles.text}>Sign Out</Text>
