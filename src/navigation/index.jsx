@@ -22,6 +22,7 @@ import PostShow from '../screens/posts/Show';
 //import screen login
 import Login from '../screens/login/Index';
 import EditProfileScreen from '../screens/edit-profile';
+import ChangePasswordScreen from '../screens/change-password';
 
 export default function Navigation() {
     return (
@@ -51,6 +52,11 @@ export default function Navigation() {
                     name="EditProfileScreen"
                     component={EditProfileScreen}
                     options={{ title: 'Edit Profile' }}
+                />
+                <Stack.Screen
+                    name="ChangePasswordScreen"
+                    component={ChangePasswordScreen}
+                    options={{ title: 'Change Password' }}
                 />
                 {/* <Stack.Screen
           name="ProductShow"

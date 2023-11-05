@@ -74,7 +74,9 @@ export default function Photoscreen({ navigation }) {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.containerMenu}
-                    onPress={() => onSubmit()}>
+                    onPress={() => {
+                        navigation.navigate('ChangePasswordScreen')
+                    }}>
                     <View style={styles.menu}>
                         <Icon name="lock" size={30} color="#3498db" />
                         <Text style={styles.text}>Change Password</Text>

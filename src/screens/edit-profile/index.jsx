@@ -170,18 +170,19 @@ export default function EditProfileScreen({ navigation }) {
                                         setOpenModalDOB(false)
                                     }}
                                 />
-                                <TouchableOpacity
-                                    onPress={() => {
-                                        doUpdateProfile()
-                                    }}
-                                    style={styles.button}>
-                                    <Text style={styles.buttonText}>
-                                        {'Update Profile'}
-                                    </Text>
-                                </TouchableOpacity>
                             </View>
                             : <></>
                     }
+
+                    <TouchableOpacity
+                        onPress={() => {
+                            doUpdateProfile()
+                        }}
+                        style={styles.button}>
+                        <Text style={styles.buttonText}>
+                            {'Update Profile'}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </View>
