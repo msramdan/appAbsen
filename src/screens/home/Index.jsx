@@ -62,6 +62,13 @@ export default function HomeScreen({ navigation }) {
     const [banners, setBanners] = useState([])
     const [news, setNews] = useState([])
     const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState([])
+    const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState([])
+
+    /**
+     * History Presence Monthly Utils State
+     * 
+     */
+    const [loadingHistoryPresenceMonthly, setLoadingHistoryPresenceMonthly] = useState(true)
 
     /**
      * Employees Today Not Present Utils State
@@ -132,6 +139,7 @@ export default function HomeScreen({ navigation }) {
         loadBanners()
         loadNews()
         loadEmployeesTodayNotPreset()
+        loadArrHistoryPresenceMonthly()
     }, [])
 
     useEffect(() => {
@@ -159,6 +167,26 @@ export default function HomeScreen({ navigation }) {
             setButtonClockOutEnabled(stateTodayPresence.is_present == 'Yes' && !stateTodayPresence.clock_out)
         }
     }, [stateTodayPresence])
+
+    const loadArrHistoryPresenceMonthly = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/attendances/history-presence-monthly', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setArrHistoryPresenceMonthly(res.data.data)
+
+                setLoadingHistoryPresenceMonthly(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
 
     const loadEmployeesTodayNotPreset = async () => {
         const token = await AsyncStorage.getItem('apiToken')
@@ -1405,10 +1433,10 @@ export default function HomeScreen({ navigation }) {
                 </View>
 
                 {/* List Tidak Masuk Hari Ini */}
-                <View style={{ marginBottom: 560, marginTop: -10 }}>
+                <View style={{ marginTop: -10 }}>
                     <View style={[styles.postContainer, { marginBottom: 10 }]}>
                         <MaterialCommunityIcons
-                            name="newspaper-variant-multiple"
+                            name="label-off"
                             style={styles.postIcon}
                             size={20}
                         />
@@ -1436,7 +1464,7 @@ export default function HomeScreen({ navigation }) {
                                     }}
                                 >
                                     <View
-                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 4 }}
+                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
                                     >
                                         <Text style={{ flex: 1, fontWeight: '600', color: '#444' }}>No</Text>
                                         <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Nama</Text>
@@ -1446,7 +1474,7 @@ export default function HomeScreen({ navigation }) {
                                         employeesTodayNotPreset.map((employeeTodayNotPreset, index) => (
                                             <View
                                                 key={index}
-                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 4 }}
+                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
                                             >
                                                 <Text style={{ flex: 1 }}>{index + 1}</Text>
                                                 <Text style={{ flex: 5 }}>{employeeTodayNotPreset.employee.full_name}</Text>
@@ -1476,10 +1504,87 @@ export default function HomeScreen({ navigation }) {
                             </>
                     }
 
-
                 </View>
                 {/* End of List Tidak Masuk Hari Ini */}
 
+                {/* List History Absen Bulanan */}
+                <View style={{ marginBottom: 560, marginTop: -10 }}>
+                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
+                        <MaterialCommunityIcons
+                            name="history"
+                            style={styles.postIcon}
+                            size={20}
+                        />
+
+                        <Text style={styles.postText}>HISTORY ABSEN</Text>
+                    </View>
+                    {
+                        loadingHistoryPresenceMonthly ?
+                            <Loading /> :
+                            <>
+
+                                <View
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: 10,
+                                        borderRadius: 10,
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 1,
+                                        },
+                                        shadowOpacity: 0.18,
+                                        shadowRadius: 1.0,
+                                        elevation: 1
+                                    }}
+                                >
+                                    <View
+                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                    >
+                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Tanggal</Text>
+                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
+                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Deskripsi</Text>
+                                    </View>
+                                    {
+                                        arrHistoryPresenceMonthly.map((historyPresenceMonthly, index) => (
+                                            <View
+                                                key={index}
+                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                            >
+                                                <Text style={{ flex: 3 }}>{historyPresenceMonthly.date}</Text>
+                                                <View style={{ flex: 5 }}>
+                                                    <Text style={{ flex: 6, backgroundColor: `${historyPresenceMonthly.is_present == 'Yes' ? '#22c55e' : '#ef4444'}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                        historyPresenceMonthly.is_present == 'Yes' ? 'Berangkat' : 'Tidak Berangkat'
+                                                    }</Text>
+                                                </View>
+                                                <Text style={{ flex: 4 }}>{historyPresenceMonthly.description}</Text>
+                                            </View>
+                                        ))
+                                    }
+                                </View>
+                                {/* <View>
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#3498db',
+                                            alignSelf: 'center',
+                                            paddingVertical: 7,
+                                            paddingHorizontal: 20,
+                                            borderRadius: 7,
+                                            marginTop: 15
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: 'white'
+                                            }}
+                                        >Tampilkan Lebih Banyak</Text>
+                                    </TouchableOpacity>
+                                </View> */}
+                            </>
+                    }
+
+                </View>
+                {/* End of List History Absen Diri Sendiri */}
             </ScrollView>
         </SafeAreaView >
     );
