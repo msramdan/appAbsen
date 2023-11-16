@@ -10,9 +10,13 @@ import {
     TouchableOpacity,
     PermissionsAndroid,
     Linking,
+    Dimensions,
+    TextInput,
 } from 'react-native';
-
+import Modal from "react-native-modal";
+import RNPickerSelect from 'react-native-picker-select';
 import React, { useState, useEffect } from 'react';
+import DocumentPicker from 'react-native-document-picker'
 
 //import carousel
 import Carousel from 'react-native-snap-carousel';
@@ -44,8 +48,50 @@ import Geolocation from 'react-native-geolocation-service';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PERMISSIONS, checkMultiple } from "react-native-permissions";
 import Axios from '../../utils/Axios';
+import { Redirect } from '../../utils/Redirect';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
+
+    /**
+     * Main Data
+     * 
+     */
+    const [stateTodayPresence, setStateTodayPresence] = useState(false)
+    const [stateTodayIzinOrSakit, setStateTodayIzinOrSakit] = useState(false)
+    const [currentAuthEmployee, setCurrentAuthEmployee] = useState(null)
+
+    /**
+     * Clock In Utils State
+     * 
+     */
+    const [showModalClockIn, setShowModalClockIn] = useState(false)
+    const [photoClockIn, setPhotoClockIn] = useState(null)
+    const [errorMessageDoClockIn, setErrorMessageDoClockIn] = useState(null)
+    const [loadingDoClockIn, setLoadingDoClockIn] = useState(false)
+    const [buttonClockInEnabled, setButtonClockInEnabled] = useState(false)
+
+    /**
+     * Clock Out Utils State
+     * 
+     */
+    const [buttonClockOutEnabled, setButtonClockOutEnabled] = useState(false)
+    const [showModalClockOut, setShowModalClockOut] = useState(false)
+    const [photoClockOut, setPhotoClockOut] = useState(null)
+    const [errorMessageDoClockOut, setErrorMessageDoClockOut] = useState(null)
+    const [loadingDoClockOut, setLoadingDoClockOut] = useState(false)
+    const [fileAttachmentIzinOrSakit, setfileAttachmentIzinOrSakit] = useState(null)
+
+    /**
+     * Izin atau Sakit Utils State
+     * 
+     */
+    const [buttonIzinOrSakitEnabled, setButtonIzinOrSakitEnabled] = useState(false)
+    const [showModalIzinAtauSakit, setShowModalIzinAtauSakit] = useState(false)
+    const [loadingDoIzinAtauSakit, setLoadingDoIzinAtauSakit] = useState(false)
+    const [errorMessageDoIzinAtauSakit, setErrorMessageDoIzinAtauSakit] = useState(null)
+    const [selectedEnumIzinSakit, setSelectedEnumIzinSakit] = useState('Izin')
+    const [detailedDescription, setDetailedDescription] = useState('')
+
     //init state sliders
     const [loadingSliders, setLoadingSliders] = useState(true);
     const [sliders, setSliders] = useState([]);
@@ -57,6 +103,96 @@ export default function HomeScreen() {
     const toast = useToast()
     const [dialogAskLocation, setDialogAskLocation] = useState(false)
     const [dialogOpenSetting, setDialogOpenSetting] = useState(false)
+
+    useEffect(() => {
+        loadStateTodayPresence()
+        loadStateCurrentAuthEmployee()
+        loadStateTodayIzinOrSakit()
+    }, [])
+
+    useEffect(() => {
+        if (!stateTodayPresence && !stateTodayIzinOrSakit) {
+            setButtonClockInEnabled(true)
+        }
+    }, [stateTodayPresence, stateTodayIzinOrSakit])
+
+
+    useEffect(() => {
+        if (stateTodayIzinOrSakit) {
+            if (stateTodayIzinOrSakit.status == 'Rejected') {
+                setButtonIzinOrSakitEnabled(true)
+            }
+        } else {
+            if (stateTodayPresence) {
+                setButtonIzinOrSakitEnabled(false)
+            } else {
+                setButtonIzinOrSakitEnabled(true)
+            }
+        }
+    }, [stateTodayPresence, stateTodayIzinOrSakit])
+
+    useEffect(() => {
+        if (stateTodayPresence) {
+            setButtonClockOutEnabled(stateTodayPresence.is_present == 'Yes' && !stateTodayPresence.clock_out)
+        }
+    }, [stateTodayPresence])
+
+    const loadStateTodayPresence = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/attendances/today-presence', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        })
+            .then((res) => {
+                if (res) {
+                    setStateTodayPresence(res.data.data)
+                }
+            }).catch((err) => {
+                if (err.response.status == 401) {
+                    Redirect.toLoginScreen(navigation)
+                }
+            })
+    }
+
+    const loadStateTodayIzinOrSakit = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/attendances/today-izin-sakit', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        })
+            .then((res) => {
+                if (res) {
+                    setStateTodayIzinOrSakit(res.data.data)
+                }
+            }).catch((err) => {
+                if (err.response.status == 401) {
+                    Redirect.toLoginScreen(navigation)
+                }
+            })
+    }
+
+    const loadStateCurrentAuthEmployee = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/auth/employee', {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        })
+            .then((res) => {
+                if (res) {
+                    setCurrentAuthEmployee(res.data.data)
+                }
+            }).catch((err) => {
+                if (err.response.status == 401) {
+                    Redirect.toLoginScreen(navigation)
+                }
+            })
+    }
 
     //method fetchDataSliders
     const fetchDataSliders = async () => {
@@ -149,38 +285,116 @@ export default function HomeScreen() {
         })
     }
 
+    const doTakeAPhotoClockIn = async () => {
+        const photoResult = await launchCamera({
+            mediaType: 'photo',
+            cameraType: 'front'
+        })
+
+        if (photoResult.assets.length > 0) {
+            setPhotoClockIn(photoResult.assets[0])
+        }
+    }
+
+    const doTakeAPhotoClockOut = async () => {
+        const photoResult = await launchCamera({
+            mediaType: 'photo',
+            cameraType: 'front'
+        })
+
+        if (photoResult.assets.length > 0) {
+            setPhotoClockOut(photoResult.assets[0])
+        }
+    }
+
     const doClockIn = () => {
-        permissionHandler(() => {
-            doClockInFunc()
+        setErrorMessageDoClockIn(null)
+        setLoadingDoClockIn(true)
+
+        if (photoClockIn) {
+            permissionHandler(() => {
+                if (currentAuthEmployee.use_gps_location == 'Yes') {
+                    doClockInUsingGPSFunc()
+                } else {
+                    doClockInWithoutGPSFunc()
+                }
+            })
+        } else {
+            setErrorMessageDoClockIn('Please, take your photo first')
+            setLoadingDoClockIn(false)
+        }
+    }
+
+    const doClockOut = () => {
+        setErrorMessageDoClockOut(null)
+        setLoadingDoClockOut(true)
+
+        if (photoClockOut) {
+            permissionHandler(() => {
+                if (currentAuthEmployee.use_gps_location == 'Yes') {
+                    doClockOutUsingGPSFunc()
+                } else {
+                    doClockOutWithoutGPSFunc()
+                }
+            })
+        } else {
+            setErrorMessageDoClockOut('Please, take your photo first')
+            setLoadingDoClockOut(false)
+        }
+    }
+
+    const doClockInWithoutGPSFunc = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        const formData = new FormData();
+
+        formData.append('photo', {
+            uri: photoClockIn.uri,
+            type: photoClockIn.type,
+            name: photoClockIn.fileName,
+        })
+
+        Axios.post('/attendances/clock-in', formData, {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        }).then((res) => {
+            setShowModalClockIn(false)
+            loadStateTodayPresence()
+            loadStateTodayIzinOrSakit()
+            setPhotoClockIn(null)
+            setErrorMessageDoClockIn(null)
+
+            setTimeout(() => {
+                toast.show('Clock In successfully', {
+                    type: 'success',
+                    placement: 'center'
+                })
+            }, 500);
+        }).catch((err) => {
+            setErrorMessageDoClockIn(err.response.data.error)
+        }).finally(() => {
+            setLoadingDoClockIn(false)
         })
     }
 
-    const doClockInFunc = async () => {
+    const doClockInUsingGPSFunc = async () => {
         const token = await AsyncStorage.getItem('apiToken')
 
         NetInfo.fetch().then(state => {
             if (!state.isConnected) {
-                toast.show('Periksa koneksi internet anda untuk melakukan absensi', {
-                    type: 'danger',
-                    placement: 'center'
-                })
+                setErrorMessageDoClockIn('Periksa koneksi internet anda untuk melakukan absensi')
             } else {
                 Geolocation.getCurrentPosition(
                     async (position) => {
-
-                        const photoResult = await launchCamera({
-                            mediaType: 'photo',
-                            cameraType: 'front'
-                        })
-
                         const formData = new FormData();
 
-                        const photo = photoResult.assets[0]
                         formData.append('photo', {
-                            uri: photo.uri,
-                            type: photo.type,
-                            name: photo.fileName,
+                            uri: photoClockIn.uri,
+                            type: photoClockIn.type,
+                            name: photoClockIn.fileName,
                         })
+
                         formData.append('latitude', position.coords.latitude)
                         formData.append('longitude', position.coords.longitude)
 
@@ -189,23 +403,706 @@ export default function HomeScreen() {
                                 'Authorization': 'Bearer ' + token,
                             }
                         }).then((res) => {
-                            toast.show('Clock In successfully', {
-                                type: 'success',
-                                placement: 'center'
-                            })
+                            setShowModalClockIn(false)
+                            loadStateTodayPresence()
+                            loadStateTodayIzinOrSakit()
+                            setPhotoClockIn(null)
+                            setErrorMessageDoClockIn(null)
+
+                            setTimeout(() => {
+                                toast.show('Clock In successfully', {
+                                    type: 'success',
+                                    placement: 'center'
+                                })
+                            }, 500);
                         }).catch((err) => {
-                            toast.show(err.response.data.error, {
-                                type: 'danger',
-                                placement: 'center'
-                            })
+                            setErrorMessageDoClockIn(err.response.data.error)
+                        }).finally(() => {
+                            setLoadingDoClockIn(false)
                         })
                     })
             }
         });
     }
 
+    const doClockOutWithoutGPSFunc = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        const formData = new FormData();
+
+        formData.append('photo', {
+            uri: photoClockOut.uri,
+            type: photoClockOut.type,
+            name: photoClockOut.fileName,
+        })
+
+        Axios.post('/attendances/clock-out', formData, {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        }).then((res) => {
+            setShowModalClockOut(false)
+            loadStateTodayPresence()
+            loadStateTodayIzinOrSakit()
+            setPhotoClockOut(null)
+            setErrorMessageDoClockOut(null)
+
+            setTimeout(() => {
+                toast.show('Clock Out successfully', {
+                    type: 'success',
+                    placement: 'center'
+                })
+            }, 500);
+        }).catch((err) => {
+            setErrorMessageDoClockOut(err.response.data.error)
+        }).finally(() => {
+            setLoadingDoClockOut(false)
+        })
+    }
+
+    const doClockOutUsingGPSFunc = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) {
+                setErrorMessageDoClockOut('Periksa koneksi internet anda untuk melakukan absensi')
+            } else {
+                Geolocation.getCurrentPosition(
+                    async (position) => {
+                        const formData = new FormData();
+
+                        formData.append('photo', {
+                            uri: photoClockOut.uri,
+                            type: photoClockOut.type,
+                            name: photoClockOut.fileName,
+                        })
+
+                        formData.append('latitude', position.coords.latitude)
+                        formData.append('longitude', position.coords.longitude)
+
+                        Axios.post('/attendances/clock-out', formData, {
+                            headers: {
+                                'Authorization': 'Bearer ' + token,
+                            }
+                        }).then((res) => {
+                            setShowModalClockOut(false)
+                            loadStateTodayPresence()
+                            loadStateTodayIzinOrSakit()
+                            setPhotoClockOut(null)
+                            setErrorMessageDoClockOut(null)
+
+                            setTimeout(() => {
+                                toast.show('Clock Out successfully', {
+                                    type: 'success',
+                                    placement: 'center'
+                                })
+                            }, 500);
+                        }).catch((err) => {
+                            setErrorMessageDoClockOut(err.response.data.error)
+                        }).finally(() => {
+                            setLoadingDoClockOut(false)
+                        })
+                    })
+            }
+        });
+    }
+
+    const doOpenDocumentPicker = async () => {
+        const response = await DocumentPicker.pick({
+            presentationStyle: 'fullScreen',
+        });
+
+        if (response.length > 0) {
+            setfileAttachmentIzinOrSakit(response[0])
+        }
+    }
+
+    const doIzinOrSakit = async () => {
+
+        setErrorMessageDoIzinAtauSakit(null)
+        const formData = new FormData();
+        const token = await AsyncStorage.getItem('apiToken')
+
+        formData.append('description', selectedEnumIzinSakit)
+        formData.append('detailed_description', detailedDescription)
+
+        if (fileAttachmentIzinOrSakit) {
+            formData.append('file_attachment', {
+                uri: fileAttachmentIzinOrSakit.uri,
+                type: fileAttachmentIzinOrSakit.type,
+                name: fileAttachmentIzinOrSakit.name,
+            })
+        }
+
+        setLoadingDoIzinAtauSakit(true)
+
+        Axios.post('/attendances/izin-or-sakit', formData, {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        }).then((res) => {
+            if (res) {
+                setShowModalIzinAtauSakit(false)
+                loadStateTodayPresence()
+                loadStateTodayIzinOrSakit()
+                setfileAttachmentIzinOrSakit(null)
+                setErrorMessageDoIzinAtauSakit(null)
+
+                setTimeout(() => {
+                    toast.show(res.data.msg, {
+                        type: 'success',
+                        placement: 'center'
+                    })
+                }, 500);
+            }
+        }).catch((err) => {
+            setErrorMessageDoIzinAtauSakit(err.response.data.error)
+        }).finally(() => {
+            setLoadingDoIzinAtauSakit(false)
+        })
+    }
+
     return (
         <SafeAreaView>
+
+
+
+            {/* Modal Clock In */}
+            <Modal isVisible={showModalClockIn}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            {
+                                loadingDoClockIn ?
+                                    <Loading style={styles.loading} /> : <></>
+                            }
+
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Clock In</Text>
+
+                            {
+                                errorMessageDoClockIn ?
+                                    <View
+                                        style={{ alignItems: 'center' }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: Dimensions.get('window').width - 100,
+                                                backgroundColor: '#ef4444',
+                                                color: '#FFF',
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 4,
+                                                marginBottom: 10,
+                                                marginTop: -7
+                                            }}
+                                        >
+                                            {errorMessageDoClockIn}
+                                        </Text>
+                                    </View> : <></>
+                            }
+
+
+                            <View
+                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                            >
+                                <Image
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        height: Dimensions.get('window').width - 100,
+                                        borderRadius: 4
+                                    }}
+                                    source={photoClockIn ? { uri: photoClockIn.uri } : require('./../../assets/images/no-photo.png')}
+                                />
+                            </View>
+                            <View
+                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                            >
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        doTakeAPhotoClockIn()
+                                    }}
+                                    style={{
+                                        borderRadius: 8,
+                                        paddingVertical: 15,
+                                        marginTop: 12,
+                                        width: Dimensions.get('window').width - 100,
+                                        backgroundColor: '#3498db',
+                                    }}
+                                >
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <MaterialCommunityIcons
+                                            name="camera"
+                                            style={[styles.postIcon, { color: 'white' }]}
+                                            size={22}
+                                        />
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >
+                                            Ambil Foto
+                                        </Text>
+                                    </View>
+
+                                </TouchableOpacity>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                ></View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalClockIn(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            doClockIn()
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#22c55e'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Clock In</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Clock In */}
+
+            {/* Modal Clock Out */}
+            <Modal isVisible={showModalClockOut}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            {
+                                loadingDoClockOut ?
+                                    <Loading style={styles.loading} /> : <></>
+                            }
+
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Clock Out</Text>
+
+                            {
+                                errorMessageDoClockOut ?
+                                    <View
+                                        style={{ alignItems: 'center' }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: Dimensions.get('window').width - 100,
+                                                backgroundColor: '#ef4444',
+                                                color: '#FFF',
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 4,
+                                                marginBottom: 10,
+                                                marginTop: -7
+                                            }}
+                                        >
+                                            {errorMessageDoClockOut}
+                                        </Text>
+                                    </View> : <></>
+                            }
+
+                            <View
+                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                            >
+                                <Image
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        height: Dimensions.get('window').width - 100,
+                                        borderRadius: 4
+                                    }}
+                                    source={photoClockOut ? { uri: photoClockOut.uri } : require('./../../assets/images/no-photo.png')}
+                                />
+                            </View>
+                            <View
+                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                            >
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        doTakeAPhotoClockOut()
+                                    }}
+                                    style={{
+                                        borderRadius: 8,
+                                        paddingVertical: 15,
+                                        marginTop: 12,
+                                        width: Dimensions.get('window').width - 100,
+                                        backgroundColor: '#3498db',
+                                    }}
+                                >
+                                    <View
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                    >
+                                        <MaterialCommunityIcons
+                                            name="camera"
+                                            style={[styles.postIcon, { color: 'white' }]}
+                                            size={22}
+                                        />
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >
+                                            Ambil Foto
+                                        </Text>
+                                    </View>
+
+                                </TouchableOpacity>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                >
+                                </View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalClockOut(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            doClockOut()
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#22c55e'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Clock Out</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Clock Out */}
+
+            {/* Modal Izin atau Sakit */}
+            <Modal isVisible={showModalIzinAtauSakit}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            {
+                                loadingDoIzinAtauSakit ?
+                                    <Loading style={styles.loading} /> : <></>
+                            }
+
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Izin atau Sakit</Text>
+
+                            {
+                                errorMessageDoIzinAtauSakit ?
+                                    <View
+                                        style={{ alignItems: 'center' }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: Dimensions.get('window').width - 100,
+                                                backgroundColor: '#ef4444',
+                                                color: '#FFF',
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 4,
+                                                marginBottom: 10,
+                                                marginTop: -7
+                                            }}
+                                        >
+                                            {errorMessageDoIzinAtauSakit}
+                                        </Text>
+                                    </View> : <></>
+                            }
+
+                            <View
+                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                            >
+
+                            </View>
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>Description</Text>
+                                    <RNPickerSelect
+                                        useNativeAndroidPickerStyle={false}
+                                        style={{
+                                            inputAndroidContainer: [styles.input],
+                                            inputAndroid: {
+                                                color: '#333'
+                                            }
+                                        }}
+                                        value={selectedEnumIzinSakit}
+                                        placeholder={{}}
+                                        onValueChange={(value) => setSelectedEnumIzinSakit(value)}
+                                        items={[
+                                            { label: 'Izin', value: 'Izin' },
+                                            { label: 'Sakit', value: 'Sakit' },
+                                        ]}
+                                    />
+                                </View>
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>Detailed Description</Text>
+                                    <TextInput
+                                        style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top' }]}
+                                        placeholder="Detailed Description"
+                                        multiline={true}
+                                        numberOfLines={3}
+                                        value={detailedDescription}
+                                        onChange={text => setDetailedDescription(text)}
+                                    />
+                                </View>
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>File Attachment</Text>
+
+                                    {
+                                        fileAttachmentIzinOrSakit ?
+                                            <Text style={{
+                                                marginTop: -2,
+                                                marginBottom: 8,
+                                                color: '#000'
+                                            }}>{fileAttachmentIzinOrSakit.name}</Text> : <></>
+                                    }
+
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            doOpenDocumentPicker()
+                                        }}
+                                        style={{
+                                            borderWidth: 1,
+                                            borderColor: 'gray',
+                                            width: 100,
+                                            paddingVertical: 6,
+                                            paddingHorizontal: 10,
+                                            borderRadius: 4
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                textAlign: 'center'
+                                            }}
+                                        >Choose File</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                >
+                                </View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalIzinAtauSakit(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            doIzinOrSakit()
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#22c55e'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Kirim Pengajuan</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Izin atau Sakit */}
 
             {/* Confirm Dialog */}
             <ConfirmDialog
@@ -304,8 +1201,14 @@ export default function HomeScreen() {
                     <Text style={[styles.productText, { marginBottom: 10 }]}>MAIN MENU</Text>
                     <View style={{ gap: 15, flexDirection: 'row' }}>
                         <TouchableOpacity
-                            onPress={doClockIn}
+                            disabled={!buttonClockInEnabled}
+                            onPress={() => {
+                                if (buttonClockInEnabled) {
+                                    setShowModalClockIn(true)
+                                }
+                            }}
                             style={{
+                                opacity: buttonClockInEnabled ? 1 : 0.55,
                                 shadowColor: '#000',
                                 shadowOffset: {
                                     width: 0,
@@ -314,7 +1217,7 @@ export default function HomeScreen() {
                                 shadowOpacity: 0.18,
                                 shadowRadius: 1.0,
                                 flex: 1,
-                                backgroundColor: 'white',
+                                backgroundColor: '#3498db',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -323,18 +1226,75 @@ export default function HomeScreen() {
                             }}>
                             <MaterialCommunityIcons
                                 name="location-enter"
-                                style={styles.postIcon}
-                                size={25}
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={40}
                             />
-                            <Text style={{ marginTop: 5 }}>Absen Masuk</Text>
+                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Clock In</Text>
                         </TouchableOpacity>
-                        <View style={{ flex: 1 }}>
-                            <Text>Absen Masuk</Text>
-
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text>Absen Masuk</Text>
-                        </View>
+                        <TouchableOpacity
+                            disabled={!buttonIzinOrSakitEnabled}
+                            onPress={() => {
+                                if (buttonIzinOrSakitEnabled) {
+                                    setShowModalIzinAtauSakit(true)
+                                }
+                            }}
+                            style={{
+                                opacity: buttonIzinOrSakitEnabled ? 1 : 0.55,
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 1,
+                                },
+                                shadowOpacity: 0.18,
+                                shadowRadius: 1.0,
+                                flex: 1,
+                                backgroundColor: '#3498db',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 12,
+                                borderRadius: 5
+                            }}
+                        >
+                            <MaterialCommunityIcons
+                                name="file-document"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={40}
+                            />
+                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Izin atau Sakit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            disabled={!buttonClockOutEnabled}
+                            onPress={() => {
+                                if (buttonClockOutEnabled) {
+                                    setShowModalClockOut(true)
+                                }
+                            }}
+                            style={{
+                                opacity: buttonClockOutEnabled ? 1 : 0.55,
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 1,
+                                },
+                                shadowOpacity: 0.18,
+                                shadowRadius: 1.0,
+                                flex: 1,
+                                backgroundColor: '#3498db',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 12,
+                                borderRadius: 5
+                            }}
+                        >
+                            <MaterialCommunityIcons
+                                name="location-exit"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={40}
+                            />
+                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Clock Out</Text>
+                        </TouchableOpacity>
                     </View>
                 </View>
                 {/* End of Menu */}
@@ -440,5 +1400,22 @@ const styles = StyleSheet.create({
     postText: {
         color: '#333333',
         fontWeight: 'bold',
+    },
+    loading: {
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        position: 'absolute',
+        zIndex: 99999,
+        backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+        borderRadius: 5,
     },
 });

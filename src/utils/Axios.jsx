@@ -1,8 +1,10 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 
 const Axios = axios.create({
-    baseURL: 'https://karyawan-be.matursoft.com/api/mobile',
+    headers: {
+        'Access-Control-Allow-Origin': true,
+    },
+    baseURL: 'https://ccc4-140-213-176-122.ngrok-free.app/api/mobile',
 })
 
 export default Axios
