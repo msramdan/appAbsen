@@ -49,6 +49,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PERMISSIONS, checkMultiple } from "react-native-permissions";
 import Axios from '../../utils/Axios';
 import { Redirect } from '../../utils/Redirect';
+import DatePicker from 'react-native-date-picker';
 
 export default function HomeScreen({ navigation }) {
 
@@ -87,6 +88,21 @@ export default function HomeScreen({ navigation }) {
      * 
      */
     const [loadingBanners, setLoadingBanners] = useState(true)
+
+    /**
+     * Pengajuan Cuti Utils State
+     * 
+     */
+    const [buttonPengajuanCutiEnabled, setButtonPengajuanCutiEnabled] = useState(true)
+    const [showModalPengajuanCuti, setShowModalPengajuanCuti] = useState(false)
+    const [showDatePickerStartDate, setShowDatePickerStartDate] = useState(false)
+    const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
+    const [pengajuanCutiStartDate, setPengajuanCutiStartDate] = useState(new Date())
+    const [pengajuanCutiEndDate, setPengajuanCutiEndDate] = useState(new Date())
+    const [pengajuanCutiReason, setPengajuanCutiReason] = useState('')
+    const [fileAttachmentPengajuanCuti, setfileAttachmentPengajuanCuti] = useState(null)
+    const [errorMessageDoPengajuanCuti, setErrorMessageDoPengajuanCuti] = useState('')
+    const [loadingDoPengajuanCuti, setLoadingDoPengajuanCuti] = useState(false)
 
     /**
      * Clock In Utils State
@@ -625,6 +641,16 @@ export default function HomeScreen({ navigation }) {
         }
     }
 
+    const doOpenDocumentPickerPengajuanCuti = async () => {
+        const response = await DocumentPicker.pick({
+            presentationStyle: 'fullScreen',
+        });
+
+        if (response.length > 0) {
+            setfileAttachmentPengajuanCuti(response[0])
+        }
+    }
+
     const doIzinOrSakit = async () => {
 
         setErrorMessageDoIzinAtauSakit(null)
@@ -667,6 +693,55 @@ export default function HomeScreen({ navigation }) {
             setErrorMessageDoIzinAtauSakit(err.response.data.error)
         }).finally(() => {
             setLoadingDoIzinAtauSakit(false)
+        })
+    }
+
+    const doPengajuanCuti = async () => {
+        setErrorMessageDoPengajuanCuti(null)
+
+        if (!fileAttachmentPengajuanCuti) {
+            setErrorMessageDoPengajuanCuti('File Dokumen Wajib Diisi')
+            return
+        }
+
+        const formData = new FormData();
+        const token = await AsyncStorage.getItem('apiToken')
+
+        formData.append('start_date', `${pengajuanCutiStartDate.getFullYear()}-${parseInt(pengajuanCutiStartDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanCutiStartDate.getMonth() + 1)}` : parseInt(pengajuanCutiStartDate.getMonth() + 1)}-${parseInt(pengajuanCutiStartDate.getDate()) < 10 ? `0${parseInt(pengajuanCutiStartDate.getDate())}` : parseInt(pengajuanCutiStartDate.getDate())}`)
+        formData.append('end_date', `${pengajuanCutiEndDate.getFullYear()}-${parseInt(pengajuanCutiEndDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanCutiEndDate.getMonth() + 1)}` : parseInt(pengajuanCutiEndDate.getMonth() + 1)}-${parseInt(pengajuanCutiEndDate.getDate()) < 10 ? `0${parseInt(pengajuanCutiEndDate.getDate())}` : parseInt(pengajuanCutiEndDate.getDate())}`)
+        formData.append('reason', pengajuanCutiReason)
+
+        formData.append('file_attachment', {
+            uri: fileAttachmentPengajuanCuti.uri,
+            type: fileAttachmentPengajuanCuti.type,
+            name: fileAttachmentPengajuanCuti.name,
+        })
+
+        setLoadingDoPengajuanCuti(true)
+
+        Axios.post('/attendances/pengajuan-cuti', formData, {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        }).then((res) => {
+            if (res) {
+                setShowModalPengajuanCuti(false)
+                loadStateTodayPresence()
+                loadStateTodayIzinOrSakit()
+                setfileAttachmentPengajuanCuti(null)
+                setErrorMessageDoPengajuanCuti(null)
+
+                setTimeout(() => {
+                    toast.show(res.data.msg, {
+                        type: 'success',
+                        placement: 'center'
+                    })
+                }, 500);
+            }
+        }).catch((err) => {
+            setErrorMessageDoPengajuanCuti(err.response.data.error)
+        }).finally(() => {
+            setLoadingDoPengajuanCuti(false)
         })
     }
 
@@ -1097,7 +1172,7 @@ export default function HomeScreen({ navigation }) {
                                         multiline={true}
                                         numberOfLines={3}
                                         value={detailedDescription}
-                                        onChange={text => setDetailedDescription(text)}
+                                        onChangeText={text => setDetailedDescription(text)}
                                     />
                                 </View>
 
@@ -1209,6 +1284,238 @@ export default function HomeScreen({ navigation }) {
                 </View>
             </Modal>
             {/* End of Modal Izin atau Sakit */}
+
+            {/* Modal Pengajuan Cuti */}
+            <Modal isVisible={showModalPengajuanCuti}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            {
+                                loadingDoPengajuanCuti ?
+                                    <Loading style={styles.loading} /> : <></>
+                            }
+
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Pengajuan Cuti</Text>
+
+                            {
+                                errorMessageDoPengajuanCuti ?
+                                    <View
+                                        style={{ alignItems: 'center' }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: Dimensions.get('window').width - 100,
+                                                backgroundColor: '#ef4444',
+                                                color: '#FFF',
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 4,
+                                                marginBottom: 10,
+                                                marginTop: -7
+                                            }}
+                                        >
+                                            {errorMessageDoPengajuanCuti}
+                                        </Text>
+                                    </View> : <></>
+                            }
+
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Tanggal Awal</Text>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setShowDatePickerStartDate(true)
+                                            }}
+                                        >
+                                            <TextInput
+                                                style={[styles.input, { color: '#333' }]}
+                                                placeholder="Tanggal Awal"
+                                                editable={false}
+                                                value={`${pengajuanCutiStartDate.getFullYear()}-${parseInt(pengajuanCutiStartDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanCutiStartDate.getMonth() + 1)}` : parseInt(pengajuanCutiStartDate.getMonth() + 1)}-${parseInt(pengajuanCutiStartDate.getDate()) < 10 ? `0${parseInt(pengajuanCutiStartDate.getDate())}` : parseInt(pengajuanCutiStartDate.getDate())}`}
+                                            />
+                                        </TouchableOpacity>
+                                        <DatePicker
+                                            modal
+                                            mode="date"
+                                            open={showDatePickerStartDate}
+                                            date={pengajuanCutiStartDate}
+                                            onConfirm={(date) => {
+                                                setShowDatePickerStartDate(false)
+                                                setPengajuanCutiStartDate(date)
+                                            }}
+                                            onCancel={() => {
+                                                setShowDatePickerStartDate(false)
+                                            }}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Tanggal Akhir</Text>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setShowDatePickerEndDate(true)
+                                            }}
+                                        >
+                                            <TextInput
+                                                style={[styles.input, { color: '#333' }]}
+                                                placeholder="Tanggal Akhir"
+                                                editable={false}
+                                                value={`${pengajuanCutiEndDate.getFullYear()}-${parseInt(pengajuanCutiEndDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanCutiEndDate.getMonth() + 1)}` : parseInt(pengajuanCutiEndDate.getMonth() + 1)}-${parseInt(pengajuanCutiEndDate.getDate()) < 10 ? `0${parseInt(pengajuanCutiEndDate.getDate())}` : parseInt(pengajuanCutiEndDate.getDate())}`}
+                                            />
+                                        </TouchableOpacity>
+                                        <DatePicker
+                                            modal
+                                            mode="date"
+                                            open={showDatePickerEndDate}
+                                            date={pengajuanCutiEndDate}
+                                            onConfirm={(date) => {
+                                                setShowDatePickerEndDate(false)
+                                                setPengajuanCutiEndDate(date)
+                                            }}
+                                            onCancel={() => {
+                                                setShowDatePickerEndDate(false)
+                                            }}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Alasan</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top' }]}
+                                            placeholder="Alasan"
+                                            multiline={true}
+                                            numberOfLines={3}
+                                            value={pengajuanCutiReason}
+                                            onChangeText={text => {
+                                                setPengajuanCutiReason(text)
+                                            }}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>File Dokumen</Text>
+
+                                        {
+                                            fileAttachmentPengajuanCuti ?
+                                                <Text style={{
+                                                    marginTop: -2,
+                                                    marginBottom: 8,
+                                                    color: '#000'
+                                                }}>{fileAttachmentPengajuanCuti.name}</Text> : <></>
+                                        }
+
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                doOpenDocumentPickerPengajuanCuti()
+                                            }}
+                                            style={{
+                                                borderWidth: 1,
+                                                borderColor: 'gray',
+                                                width: 100,
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 4
+                                            }}
+                                        >
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center'
+                                                }}
+                                            >Choose File</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                ></View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalPengajuanCuti(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            doPengajuanCuti()
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#22c55e'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Pengajuan Cuti</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Clock In */}
 
             {/* Confirm Dialog */}
             <ConfirmDialog
@@ -1401,6 +1708,41 @@ export default function HomeScreen({ navigation }) {
                             />
                             <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Clock Out</Text>
                         </TouchableOpacity>
+                    </View>
+                    <View style={{ gap: 15, marginTop: 15, flexDirection: 'row' }}>
+                        <TouchableOpacity
+                            disabled={!buttonPengajuanCutiEnabled}
+                            onPress={() => {
+                                if (buttonPengajuanCutiEnabled) {
+                                    setShowModalPengajuanCuti(true)
+                                }
+                            }}
+                            style={{
+                                opacity: buttonPengajuanCutiEnabled ? 1 : 0.55,
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 1,
+                                },
+                                shadowOpacity: 0.18,
+                                shadowRadius: 1.0,
+                                flex: 1,
+                                backgroundColor: '#3498db',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 12,
+                                borderRadius: 5
+                            }}>
+                            <MaterialCommunityIcons
+                                name="calendar"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={40}
+                            />
+                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Pengajuan Cuti</Text>
+                        </TouchableOpacity>
+                        <View style={{ flex: 1 }}></View>
+                        <View style={{ flex: 1 }}></View>
                     </View>
                 </View>
                 {/* End of Menu */}
