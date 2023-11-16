@@ -60,6 +60,13 @@ export default function HomeScreen({ navigation }) {
     const [stateTodayIzinOrSakit, setStateTodayIzinOrSakit] = useState(false)
     const [currentAuthEmployee, setCurrentAuthEmployee] = useState(null)
     const [banners, setBanners] = useState([])
+    const [news, setNews] = useState([])
+
+    /**
+     * News Utils State
+     * 
+     */
+    const [loadingNews, setLoadingNews] = useState(true)
 
     /**
      * Banners Utils State
@@ -116,6 +123,7 @@ export default function HomeScreen({ navigation }) {
         loadStateCurrentAuthEmployee()
         loadStateTodayIzinOrSakit()
         loadBanners()
+        loadNews()
     }, [])
 
     useEffect(() => {
@@ -123,7 +131,6 @@ export default function HomeScreen({ navigation }) {
             setButtonClockInEnabled(true)
         }
     }, [stateTodayPresence, stateTodayIzinOrSakit])
-
 
     useEffect(() => {
         if (stateTodayIzinOrSakit) {
@@ -156,6 +163,25 @@ export default function HomeScreen({ navigation }) {
             if (res) {
                 setBanners(res.data.data)
                 setLoadingBanners(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
+
+    const loadNews = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/news', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setNews(res.data.data)
+                setLoadingNews(false)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
@@ -1329,16 +1355,17 @@ export default function HomeScreen({ navigation }) {
                         style={styles.postIcon}
                         size={20}
                     />
+
                     <Text style={styles.postText}>BERITA TERBARU</Text>
                 </View>
                 <View style={{ flex: 1, flexDirection: 'row' }}>
-                    {loadingPosts ? (
+                    {loadingNews ? (
                         <Loading />
                     ) : (
                         <>
                             <FlatList
                                 style={{ flex: 1, marginTop: 10, marginBottom: 260 }}
-                                data={posts}
+                                data={news}
                                 renderItem={({ item, index, separators }) => (
                                     <ListPost data={item} index={index} />
                                 )}
