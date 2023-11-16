@@ -59,6 +59,13 @@ export default function HomeScreen({ navigation }) {
     const [stateTodayPresence, setStateTodayPresence] = useState(false)
     const [stateTodayIzinOrSakit, setStateTodayIzinOrSakit] = useState(false)
     const [currentAuthEmployee, setCurrentAuthEmployee] = useState(null)
+    const [banners, setBanners] = useState([])
+
+    /**
+     * Banners Utils State
+     * 
+     */
+    const [loadingBanners, setLoadingBanners] = useState(true)
 
     /**
      * Clock In Utils State
@@ -108,6 +115,7 @@ export default function HomeScreen({ navigation }) {
         loadStateTodayPresence()
         loadStateCurrentAuthEmployee()
         loadStateTodayIzinOrSakit()
+        loadBanners()
     }, [])
 
     useEffect(() => {
@@ -136,6 +144,25 @@ export default function HomeScreen({ navigation }) {
             setButtonClockOutEnabled(stateTodayPresence.is_present == 'Yes' && !stateTodayPresence.clock_out)
         }
     }, [stateTodayPresence])
+
+    const loadBanners = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/banners', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setBanners(res.data.data)
+                setLoadingBanners(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
 
     const loadStateTodayPresence = async () => {
         const token = await AsyncStorage.getItem('apiToken')
@@ -198,7 +225,6 @@ export default function HomeScreen({ navigation }) {
     const fetchDataSliders = async () => {
         //set loading true
         setLoadingSliders(true);
-
         await Api.get('/api/public/sliders').then(response => {
             //assign data to state
             setSliders(response.data.data);
@@ -564,8 +590,6 @@ export default function HomeScreen({ navigation }) {
 
     return (
         <SafeAreaView>
-
-
 
             {/* Modal Clock In */}
             <Modal isVisible={showModalClockIn}>
@@ -1182,11 +1206,11 @@ export default function HomeScreen({ navigation }) {
             <ScrollView style={{ padding: 15 }}>
                 {/* carousel */}
                 <View style={styles.sliderContainer}>
-                    {loadingSliders ? (
+                    {loadingBanners ? (
                         <Loading />
                     ) : (
                         <Carousel
-                            data={sliders}
+                            data={banners}
                             renderItem={({ item, index, separators }) => (
                                 <Slider data={item} index={index} />
                             )}
