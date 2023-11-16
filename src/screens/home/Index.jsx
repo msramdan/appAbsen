@@ -61,6 +61,13 @@ export default function HomeScreen({ navigation }) {
     const [currentAuthEmployee, setCurrentAuthEmployee] = useState(null)
     const [banners, setBanners] = useState([])
     const [news, setNews] = useState([])
+    const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState([])
+
+    /**
+     * Employees Today Not Present Utils State
+     * 
+     */
+    const [loadingEmployeesTodayNotPresent, setLoadingEmployeesTodayNotPresent] = useState(true)
 
     /**
      * News Utils State
@@ -124,6 +131,7 @@ export default function HomeScreen({ navigation }) {
         loadStateTodayIzinOrSakit()
         loadBanners()
         loadNews()
+        loadEmployeesTodayNotPreset()
     }, [])
 
     useEffect(() => {
@@ -151,6 +159,26 @@ export default function HomeScreen({ navigation }) {
             setButtonClockOutEnabled(stateTodayPresence.is_present == 'Yes' && !stateTodayPresence.clock_out)
         }
     }, [stateTodayPresence])
+
+    const loadEmployeesTodayNotPreset = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/attendances/all-employees-today-not-present', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setEmployeesTodayNotPreset(res.data.data)
+
+                setLoadingEmployeesTodayNotPresent(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
 
     const loadBanners = async () => {
         const token = await AsyncStorage.getItem('apiToken')
@@ -1364,7 +1392,7 @@ export default function HomeScreen({ navigation }) {
                     ) : (
                         <>
                             <FlatList
-                                style={{ flex: 1, marginTop: 10, marginBottom: 260 }}
+                                style={{ flex: 1, marginTop: 10 }}
                                 data={news}
                                 renderItem={({ item, index, separators }) => (
                                     <ListPost data={item} index={index} />
@@ -1375,8 +1403,85 @@ export default function HomeScreen({ navigation }) {
                         </>
                     )}
                 </View>
+
+                {/* List Tidak Masuk Hari Ini */}
+                <View style={{ marginBottom: 560, marginTop: -10 }}>
+                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
+                        <MaterialCommunityIcons
+                            name="newspaper-variant-multiple"
+                            style={styles.postIcon}
+                            size={20}
+                        />
+
+                        <Text style={styles.postText}>TIDAK MASUK HARI INI</Text>
+                    </View>
+                    {
+                        loadingEmployeesTodayNotPresent ?
+                            <Loading /> :
+                            <>
+
+                                <View
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: 10,
+                                        borderRadius: 10,
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 1,
+                                        },
+                                        shadowOpacity: 0.18,
+                                        shadowRadius: 1.0,
+                                        elevation: 1
+                                    }}
+                                >
+                                    <View
+                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 4 }}
+                                    >
+                                        <Text style={{ flex: 1, fontWeight: '600', color: '#444' }}>No</Text>
+                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Nama</Text>
+                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Deskripsi</Text>
+                                    </View>
+                                    {
+                                        employeesTodayNotPreset.map((employeeTodayNotPreset, index) => (
+                                            <View
+                                                key={index}
+                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 4 }}
+                                            >
+                                                <Text style={{ flex: 1 }}>{index + 1}</Text>
+                                                <Text style={{ flex: 5 }}>{employeeTodayNotPreset.employee.full_name}</Text>
+                                                <Text style={{ flex: 3 }}>{employeeTodayNotPreset.description}</Text>
+                                            </View>
+                                        ))
+                                    }
+                                </View>
+                                {/* <View>
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#3498db',
+                                            alignSelf: 'center',
+                                            paddingVertical: 7,
+                                            paddingHorizontal: 20,
+                                            borderRadius: 7,
+                                            marginTop: 15
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: 'white'
+                                            }}
+                                        >Tampilkan Lebih Banyak</Text>
+                                    </TouchableOpacity>
+                                </View> */}
+                            </>
+                    }
+
+
+                </View>
+                {/* End of List Tidak Masuk Hari Ini */}
+
             </ScrollView>
-        </SafeAreaView>
+        </SafeAreaView >
     );
 }
 
