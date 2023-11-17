@@ -67,6 +67,15 @@ export default function HomeScreen({ navigation }) {
     const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState([])
     const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState([])
     const [arrHistoryPengajuanIzinSakit, setArrHistoryPengajuanIzinSakit] = useState([])
+    const [arrHistoryPengajuanRevisiAbsen, setArrHistoryPengajuanRevisiAbsen] = useState([])
+
+    /**
+     * History Pengajuan Revisi Absen Utils State
+     * 
+     */
+    const [loadingHistoryPengajuanRevisiAbsen, setLoadingHistoryPengajuanRevisiAbsen] = useState(true)
+    const [objDetailHistoryPengajuanRevisiAbsen, setObjDetailHistoryPengajuanRevisiAbsen] = useState({})
+    const [showModalDetailHistoryPengajuanRevisiAbsen, setShowModalDetailHistoryPengajuanRevisiAbsen] = useState(false)
 
     /**
      * History Pengajuan Izin / Sakit Utils State
@@ -193,6 +202,7 @@ export default function HomeScreen({ navigation }) {
         loadArrHistoryPresenceMonthly()
         loadArrHistoryPengajuanCuti()
         loadArrHistoryPengajuanIzinSakit()
+        loadArrHistoryPengajuanRevisiAbsen()
     }, [])
 
     useEffect(() => {
@@ -273,6 +283,26 @@ export default function HomeScreen({ navigation }) {
                 setArrHistoryPengajuanIzinSakit(res.data.data)
 
                 setLoadingHistoryPengajuanIzinSakit(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
+
+    const loadArrHistoryPengajuanRevisiAbsen = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/attendances/current-employee-pengajuan-revisi-absen', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setArrHistoryPengajuanRevisiAbsen(res.data.data)
+
+                setLoadingHistoryPengajuanRevisiAbsen(false)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
@@ -2196,6 +2226,166 @@ export default function HomeScreen({ navigation }) {
             </Modal>
             {/* End of Modal Detail History Pengajuan Cuti */}
 
+            {/* Modal Detail History Pengajuan Revisi Absen */}
+            <Modal isVisible={showModalDetailHistoryPengajuanRevisiAbsen}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Detail History Pengajuan Revisi Absen</Text>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Tanggal</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Tanggal"
+                                            editable={false}
+                                            value={objDetailHistoryPengajuanRevisiAbsen.date}
+                                        />
+                                    </View>
+
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Clock In</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Clock In"
+                                            editable={false}
+                                            value={objDetailHistoryPengajuanRevisiAbsen.clock_in}
+                                        />
+                                    </View>
+
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Clock Out</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Clock Out"
+                                            editable={false}
+                                            value={objDetailHistoryPengajuanRevisiAbsen.clock_out}
+                                        />
+                                    </View>
+                                </View>
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>Reason</Text>
+                                    <TextInput
+                                        style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                        placeholder="Reason"
+                                        multiline={true}
+                                        numberOfLines={3}
+                                        editable={false}
+                                        value={objDetailHistoryPengajuanRevisiAbsen.reason}
+                                    />
+                                </View>
+
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <View>
+                                        <Text style={{
+                                            marginTop: 8,
+                                            marginBottom: 5
+                                        }}>Status</Text>
+                                        <Text style={{ backgroundColor: `${objDetailHistoryPengajuanRevisiAbsen.status == 'Waiting' ? '#1e293b' : `${objDetailHistoryPengajuanRevisiAbsen.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, borderRadius: 3 }}>{
+                                            objDetailHistoryPengajuanRevisiAbsen.status
+                                        }</Text>
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginTop: 8,
+                                            marginBottom: 5
+                                        }}>Note Review</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Note Review"
+                                            editable={false}
+                                            multiline={true}
+                                            numberOfLines={3}
+                                            value={objDetailHistoryPengajuanRevisiAbsen.note_review}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                ></View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalDetailHistoryPengajuanRevisiAbsen(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Detail History Pengajuan Revisi Absen */}
+
             {/* Confirm Dialog */}
             <ConfirmDialog
                 title="Akses Lokasi Diperlukan"
@@ -2742,7 +2932,7 @@ export default function HomeScreen({ navigation }) {
                 {/* End of List History PENGAJUAN IZIN / SAKIT */}
 
                 {/* List History Pengajuan Cuti */}
-                <View style={{ marginBottom: 560, marginTop: -10 }}>
+                <View style={{ marginTop: -10 }}>
                     <View style={[styles.postContainer, { marginBottom: 10 }]}>
                         <MaterialCommunityIcons
                             name="history"
@@ -2842,6 +3032,108 @@ export default function HomeScreen({ navigation }) {
 
                 </View>
                 {/* End of List History Pengajuan Cuti */}
+
+                {/* List History Pengajuan REVISI ABSEN */}
+                <View style={{ marginBottom: 560, marginTop: -10 }}>
+                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
+                        <MaterialCommunityIcons
+                            name="history"
+                            style={styles.postIcon}
+                            size={20}
+                        />
+
+                        <Text style={styles.postText}>HISTORY PENGAJUAN REVISI ABSEN</Text>
+                    </View>
+                    {
+                        loadingHistoryPengajuanRevisiAbsen ?
+                            <Loading /> :
+                            <>
+
+                                <View
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: 10,
+                                        borderRadius: 10,
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 1,
+                                        },
+                                        shadowOpacity: 0.18,
+                                        shadowRadius: 1.0,
+                                        elevation: 1
+                                    }}
+                                >
+                                    <View
+                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                    >
+                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Dikirim Pada</Text>
+                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
+                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Aksi</Text>
+                                    </View>
+                                    {
+                                        arrHistoryPengajuanRevisiAbsen.map((historyPengajuanRevisiAbsen, index) => (
+                                            <View
+                                                key={index}
+                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                            >
+                                                <Text style={{ flex: 4 }}>{moment(historyPengajuanRevisiAbsen.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
+                                                <View style={{ flex: 5 }}>
+                                                    <Text style={{ flex: 6, backgroundColor: `${historyPengajuanRevisiAbsen.status == 'Waiting' ? '#1e293b' : `${historyPengajuanRevisiAbsen.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                        historyPengajuanRevisiAbsen.status
+                                                    }</Text>
+                                                </View>
+                                                <Text style={{ flex: 3 }}>
+                                                    <View>
+                                                        <TouchableOpacity
+                                                            onPress={() => {
+                                                                setObjDetailHistoryPengajuanRevisiAbsen(historyPengajuanRevisiAbsen)
+                                                                setShowModalDetailHistoryPengajuanRevisiAbsen(true)
+                                                            }}
+                                                            style={{ backgroundColor: '#3b82f6', paddingVertical: 2, paddingHorizontal: 5, alignSelf: 'flex-start', borderRadius: 3 }}
+                                                        >
+                                                            <View
+                                                                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                                            >
+                                                                <MaterialCommunityIcons
+                                                                    name="information-outline"
+                                                                    style={{ color: 'white' }}
+                                                                    size={20}
+                                                                />
+                                                                <Text
+                                                                    style={{ color: 'white', fontWeight: '500', fontSize: 12, paddingRight: 3 }}
+                                                                >Detail</Text>
+                                                            </View>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </Text>
+                                            </View>
+                                        ))
+                                    }
+                                </View>
+                                {/* <View>
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#3498db',
+                                            alignSelf: 'center',
+                                            paddingVertical: 7,
+                                            paddingHorizontal: 20,
+                                            borderRadius: 7,
+                                            marginTop: 15
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: 'white'
+                                            }}
+                                        >Tampilkan Lebih Banyak</Text>
+                                    </TouchableOpacity>
+                                </View> */}
+                            </>
+                    }
+
+                </View>
+                {/* End of List History Pengajuan REVISI ABSEN */}
             </ScrollView>
         </SafeAreaView >
     );
