@@ -50,6 +50,7 @@ import { PERMISSIONS, checkMultiple } from "react-native-permissions";
 import Axios from '../../utils/Axios';
 import { Redirect } from '../../utils/Redirect';
 import DatePicker from 'react-native-date-picker';
+import moment from 'moment';
 
 export default function HomeScreen({ navigation }) {
 
@@ -64,6 +65,15 @@ export default function HomeScreen({ navigation }) {
     const [news, setNews] = useState([])
     const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState([])
     const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState([])
+    const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState([])
+
+    /**
+     * History Pengajuan Cuti Utils State
+     * 
+     */
+    const [loadingHistoryPengajuanCuti, setLoadingHistoryPengajuanCuti] = useState(true)
+    const [objDetailHistoryPengajuanCuti, setObjDetailHistoryPengajuanCuti] = useState({})
+    const [showModalDetailHistoryPengajuanCuti, setShowModalDetailHistoryPengajuanCuti] = useState(false)
 
     /**
      * History Presence Monthly Utils State
@@ -172,6 +182,7 @@ export default function HomeScreen({ navigation }) {
         loadNews()
         loadEmployeesTodayNotPreset()
         loadArrHistoryPresenceMonthly()
+        loadArrHistoryPengajuanCuti()
     }, [])
 
     useEffect(() => {
@@ -212,6 +223,26 @@ export default function HomeScreen({ navigation }) {
                 setArrHistoryPresenceMonthly(res.data.data)
 
                 setLoadingHistoryPresenceMonthly(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
+
+    const loadArrHistoryPengajuanCuti = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/attendances/current-employee-pengajuan-cuti', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setArrHistoryPengajuanCuti(res.data.data)
+
+                setLoadingHistoryPengajuanCuti(false)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
@@ -1801,6 +1832,170 @@ export default function HomeScreen({ navigation }) {
             </Modal>
             {/* End of Modal Pengajuan Revisi Absen */}
 
+            {/* Modal Detail History Pengajuan Cuti */}
+            <Modal isVisible={showModalDetailHistoryPengajuanCuti}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            {
+                                loadingDoPengajuanRevisiAbsen ?
+                                    <Loading style={styles.loading} /> : <></>
+                            }
+
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Detail History Pengajuan Cuti</Text>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Tanggal Awal</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Tanggal Awal"
+                                            editable={false}
+                                            value={objDetailHistoryPengajuanCuti.start_date}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Tanggal Akhir</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Tanggal Akhir"
+                                            editable={false}
+                                            value={objDetailHistoryPengajuanCuti.end_date}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Alasan</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Alasan"
+                                            editable={false}
+                                            multiline={true}
+                                            numberOfLines={3}
+                                            value={objDetailHistoryPengajuanCuti.reason}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>File Dokumen</Text>
+
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                Linking.openURL(objDetailHistoryPengajuanCuti.file_attachment)
+                                            }}
+                                            style={{
+                                                backgroundColor: '#0ea5e9',
+                                                width: 100,
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 4
+                                            }}
+                                        >
+                                            <Text
+                                                style={{
+                                                    textAlign: 'center',
+                                                    fontWeight: '500',
+                                                    color: '#FFF'
+                                                }}
+                                            >Lihat File</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginTop: 8,
+                                            marginBottom: 5
+                                        }}>Status</Text>
+                                        <Text style={{ backgroundColor: `${objDetailHistoryPengajuanCuti.status == 'Waiting' ? '#1e293b' : `${objDetailHistoryPengajuanCuti.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, borderRadius: 3 }}>{
+                                            objDetailHistoryPengajuanCuti.status
+                                        }</Text>
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginTop: 8,
+                                            marginBottom: 5
+                                        }}>Note Review</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Note Review"
+                                            editable={false}
+                                            multiline={true}
+                                            numberOfLines={3}
+                                            value={objDetailHistoryPengajuanCuti.note_review}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                ></View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalDetailHistoryPengajuanCuti(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Detail History Pengajuan Cuti */}
+
             {/* Confirm Dialog */}
             <ConfirmDialog
                 title="Akses Lokasi Diperlukan"
@@ -2164,7 +2359,7 @@ export default function HomeScreen({ navigation }) {
                 {/* End of List Tidak Masuk Hari Ini */}
 
                 {/* List History Absen Bulanan */}
-                <View style={{ marginBottom: 560, marginTop: -10 }}>
+                <View style={{ marginTop: -10 }}>
                     <View style={[styles.postContainer, { marginBottom: 10 }]}>
                         <MaterialCommunityIcons
                             name="history"
@@ -2241,6 +2436,108 @@ export default function HomeScreen({ navigation }) {
 
                 </View>
                 {/* End of List History Absen Diri Sendiri */}
+
+                {/* List History Pengajuan Cuti */}
+                <View style={{ marginBottom: 560, marginTop: -10 }}>
+                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
+                        <MaterialCommunityIcons
+                            name="history"
+                            style={styles.postIcon}
+                            size={20}
+                        />
+
+                        <Text style={styles.postText}>HISTORY PENGAJUAN CUTI</Text>
+                    </View>
+                    {
+                        loadingHistoryPengajuanCuti ?
+                            <Loading /> :
+                            <>
+
+                                <View
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: 10,
+                                        borderRadius: 10,
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 1,
+                                        },
+                                        shadowOpacity: 0.18,
+                                        shadowRadius: 1.0,
+                                        elevation: 1
+                                    }}
+                                >
+                                    <View
+                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                    >
+                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Tanggal</Text>
+                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
+                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Aksi</Text>
+                                    </View>
+                                    {
+                                        arrHistoryPengajuanCuti.map((historyPengajuanCuti, index) => (
+                                            <View
+                                                key={index}
+                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                            >
+                                                <Text style={{ flex: 4 }}>{moment(historyPengajuanCuti.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
+                                                <View style={{ flex: 5 }}>
+                                                    <Text style={{ flex: 6, backgroundColor: `${historyPengajuanCuti.status == 'Waiting' ? '#1e293b' : `${historyPengajuanCuti.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                        historyPengajuanCuti.status
+                                                    }</Text>
+                                                </View>
+                                                <Text style={{ flex: 3 }}>
+                                                    <View>
+                                                        <TouchableOpacity
+                                                            onPress={() => {
+                                                                setObjDetailHistoryPengajuanCuti(historyPengajuanCuti)
+                                                                setShowModalDetailHistoryPengajuanCuti(true)
+                                                            }}
+                                                            style={{ backgroundColor: '#3b82f6', paddingVertical: 2, paddingHorizontal: 5, alignSelf: 'flex-start', borderRadius: 3 }}
+                                                        >
+                                                            <View
+                                                                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                                            >
+                                                                <MaterialCommunityIcons
+                                                                    name="information-outline"
+                                                                    style={{ color: 'white' }}
+                                                                    size={20}
+                                                                />
+                                                                <Text
+                                                                    style={{ color: 'white', fontWeight: '500', fontSize: 12, paddingRight: 3 }}
+                                                                >Detail</Text>
+                                                            </View>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </Text>
+                                            </View>
+                                        ))
+                                    }
+                                </View>
+                                {/* <View>
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#3498db',
+                                            alignSelf: 'center',
+                                            paddingVertical: 7,
+                                            paddingHorizontal: 20,
+                                            borderRadius: 7,
+                                            marginTop: 15
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: 'white'
+                                            }}
+                                        >Tampilkan Lebih Banyak</Text>
+                                    </TouchableOpacity>
+                                </View> */}
+                            </>
+                    }
+
+                </View>
+                {/* End of List History Pengajuan Cuti */}
             </ScrollView>
         </SafeAreaView >
     );
