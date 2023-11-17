@@ -90,6 +90,22 @@ export default function HomeScreen({ navigation }) {
     const [loadingBanners, setLoadingBanners] = useState(true)
 
     /**
+     * Pengajuan Revisi Absen Utils State
+     * 
+     */
+    const [buttonPengajuanRevisiAbsenEnabled, setButtonPengajuanRevisiAbsenEnabled] = useState(true)
+    const [showModalPengajuanRevisiAbsen, setShowModalPengajuanRevisiAbsen] = useState(false)
+    const [loadingDoPengajuanRevisiAbsen, setLoadingDoPengajuanRevisiAbsen] = useState(false)
+    const [errorMessageDoPengajuanRevisiAbsen, setErrorMessageDoPengajuanRevisiAbsen] = useState('')
+    const [pengajuanRevisiAbsenDate, setPengajuanRevisiAbsenDate] = useState(new Date())
+    const [pengajuanRevisiAbsenClockIn, setPengajuanRevisiAbsenClockIn] = useState(new Date())
+    const [pengajuanRevisiAbsenClockOut, setPengajuanRevisiAbsenClockOut] = useState(new Date())
+    const [showDatePickerPengajuanRevisiAbsenDate, setShowDatePickerPengajuanRevisiAbsenDate] = useState(false)
+    const [showDatePickerPengajuanRevisiAbsenClockIn, setShowDatePickerPengajuanRevisiAbsenClockIn] = useState(false)
+    const [showDatePickerPengajuanRevisiAbsenClockOut, setShowDatePickerPengajuanRevisiAbsenClockOut] = useState(false)
+    const [pengajuanRevisiAbsenReason, setPengajuanRevisiAbsenReason] = useState('')
+
+    /**
      * Pengajuan Cuti Utils State
      * 
      */
@@ -742,6 +758,44 @@ export default function HomeScreen({ navigation }) {
             setErrorMessageDoPengajuanCuti(err.response.data.error)
         }).finally(() => {
             setLoadingDoPengajuanCuti(false)
+        })
+    }
+
+    const doPengajuanRevisiAbsen = async () => {
+        setErrorMessageDoPengajuanRevisiAbsen(null)
+
+        const formData = new FormData();
+        const token = await AsyncStorage.getItem('apiToken')
+
+        formData.append('date', `${pengajuanRevisiAbsenDate.getFullYear()}-${parseInt(pengajuanRevisiAbsenDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanRevisiAbsenDate.getMonth() + 1)}` : parseInt(pengajuanRevisiAbsenDate.getMonth() + 1)}-${parseInt(pengajuanRevisiAbsenDate.getDate()) < 10 ? `0${parseInt(pengajuanRevisiAbsenDate.getDate())}` : parseInt(pengajuanRevisiAbsenDate.getDate())}`)
+        formData.append('clock_in', `${pengajuanRevisiAbsenClockIn.getHours() > 9 ? pengajuanRevisiAbsenClockIn.getHours() : `0${pengajuanRevisiAbsenClockIn.getHours()}`}:${pengajuanRevisiAbsenClockIn.getMinutes() > 9 ? pengajuanRevisiAbsenClockIn.getMinutes() : `0${pengajuanRevisiAbsenClockIn.getMinutes()}`}`)
+        formData.append('clock_out', `${pengajuanRevisiAbsenClockOut.getHours() > 9 ? pengajuanRevisiAbsenClockOut.getHours() : `0${pengajuanRevisiAbsenClockOut.getHours()}`}:${pengajuanRevisiAbsenClockOut.getMinutes() > 9 ? pengajuanRevisiAbsenClockOut.getMinutes() : `0${pengajuanRevisiAbsenClockOut.getMinutes()}`}`)
+        formData.append('reason', pengajuanRevisiAbsenReason)
+
+        setLoadingDoPengajuanRevisiAbsen(true)
+
+        Axios.post('/attendances/pengajuan-revisi-absen', formData, {
+            headers: {
+                'Authorization': 'Bearer ' + token,
+            }
+        }).then((res) => {
+            if (res) {
+                setShowModalPengajuanRevisiAbsen(false)
+                loadStateTodayPresence()
+                loadStateTodayIzinOrSakit()
+                setErrorMessageDoPengajuanRevisiAbsen(null)
+
+                setTimeout(() => {
+                    toast.show(res.data.msg, {
+                        type: 'success',
+                        placement: 'center'
+                    })
+                }, 500);
+            }
+        }).catch((err) => {
+            setErrorMessageDoPengajuanRevisiAbsen(err.response.data.error)
+        }).finally(() => {
+            setLoadingDoPengajuanRevisiAbsen(false)
         })
     }
 
@@ -1515,7 +1569,237 @@ export default function HomeScreen({ navigation }) {
                     </View>
                 </View>
             </Modal>
-            {/* End of Modal Clock In */}
+            {/* End of Modal Pengajuan Cuti */}
+
+            {/* Modal Pengajuan Revisi Absen */}
+            <Modal isVisible={showModalPengajuanRevisiAbsen}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            {
+                                loadingDoPengajuanRevisiAbsen ?
+                                    <Loading style={styles.loading} /> : <></>
+                            }
+
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Pengajuan Revisi Absen</Text>
+
+                            {
+                                errorMessageDoPengajuanRevisiAbsen ?
+                                    <View
+                                        style={{ alignItems: 'center' }}
+                                    >
+                                        <Text
+                                            style={{
+                                                width: Dimensions.get('window').width - 100,
+                                                backgroundColor: '#ef4444',
+                                                color: '#FFF',
+                                                paddingVertical: 6,
+                                                paddingHorizontal: 10,
+                                                borderRadius: 4,
+                                                marginBottom: 10,
+                                                marginTop: -7
+                                            }}
+                                        >
+                                            {errorMessageDoPengajuanRevisiAbsen}
+                                        </Text>
+                                    </View> : <></>
+                            }
+
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Tanggal</Text>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setShowDatePickerPengajuanRevisiAbsenDate(true)
+                                            }}
+                                        >
+                                            <TextInput
+                                                style={[styles.input, { color: '#333' }]}
+                                                placeholder="Tanggal"
+                                                editable={false}
+                                                value={`${pengajuanRevisiAbsenDate.getFullYear()}-${parseInt(pengajuanRevisiAbsenDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanRevisiAbsenDate.getMonth() + 1)}` : parseInt(pengajuanRevisiAbsenDate.getMonth() + 1)}-${parseInt(pengajuanRevisiAbsenDate.getDate()) < 10 ? `0${parseInt(pengajuanRevisiAbsenDate.getDate())}` : parseInt(pengajuanRevisiAbsenDate.getDate())}`}
+                                            />
+                                        </TouchableOpacity>
+                                        <DatePicker
+                                            modal
+                                            mode="date"
+                                            open={showDatePickerPengajuanRevisiAbsenDate}
+                                            date={pengajuanRevisiAbsenDate}
+                                            onConfirm={(date) => {
+                                                setShowDatePickerPengajuanRevisiAbsenDate(false)
+                                                setPengajuanRevisiAbsenDate(date)
+                                            }}
+                                            onCancel={() => {
+                                                setShowDatePickerPengajuanRevisiAbsenDate(false)
+                                            }}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Clock In</Text>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setShowDatePickerPengajuanRevisiAbsenClockIn(true)
+                                            }}
+                                        >
+                                            <TextInput
+                                                style={[styles.input, { color: '#333' }]}
+                                                placeholder="Clock In"
+                                                editable={false}
+                                                value={`${pengajuanRevisiAbsenClockIn.getHours() > 9 ? pengajuanRevisiAbsenClockIn.getHours() : `0${pengajuanRevisiAbsenClockIn.getHours()}`}:${pengajuanRevisiAbsenClockIn.getMinutes() > 9 ? pengajuanRevisiAbsenClockIn.getMinutes() : `0${pengajuanRevisiAbsenClockIn.getMinutes()}`}`}
+                                            />
+                                        </TouchableOpacity>
+                                        <DatePicker
+                                            modal
+                                            mode="time"
+                                            open={showDatePickerPengajuanRevisiAbsenClockIn}
+                                            date={pengajuanRevisiAbsenClockIn}
+                                            onConfirm={(date) => {
+                                                setShowDatePickerPengajuanRevisiAbsenClockIn(false)
+                                                setPengajuanRevisiAbsenClockIn(date)
+                                            }}
+                                            locale='id_ID'
+                                            onCancel={() => {
+                                                setShowDatePickerPengajuanRevisiAbsenClockIn(false)
+                                            }}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Clock Out</Text>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setShowDatePickerPengajuanRevisiAbsenClockOut(true)
+                                            }}
+                                        >
+                                            <TextInput
+                                                style={[styles.input, { color: '#333' }]}
+                                                placeholder="Clock Out"
+                                                editable={false}
+                                                value={`${pengajuanRevisiAbsenClockOut.getHours() > 9 ? pengajuanRevisiAbsenClockOut.getHours() : `0${pengajuanRevisiAbsenClockOut.getHours()}`}:${pengajuanRevisiAbsenClockOut.getMinutes() > 9 ? pengajuanRevisiAbsenClockOut.getMinutes() : `0${pengajuanRevisiAbsenClockOut.getMinutes()}`}`}
+                                            />
+                                        </TouchableOpacity>
+                                        <DatePicker
+                                            modal
+                                            mode="time"
+                                            open={showDatePickerPengajuanRevisiAbsenClockOut}
+                                            date={pengajuanRevisiAbsenClockOut}
+                                            onConfirm={(date) => {
+                                                setShowDatePickerPengajuanRevisiAbsenClockOut(false)
+                                                setPengajuanRevisiAbsenClockOut(date)
+                                            }}
+                                            locale='id_ID'
+                                            onCancel={() => {
+                                                setShowDatePickerPengajuanRevisiAbsenClockOut(false)
+                                            }}
+                                        />
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Alasan</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top' }]}
+                                            placeholder="Alasan"
+                                            multiline={true}
+                                            numberOfLines={3}
+                                            value={pengajuanRevisiAbsenReason}
+                                            onChangeText={text => {
+                                                setPengajuanRevisiAbsenReason(text)
+                                            }}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                ></View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalPengajuanRevisiAbsen(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            doPengajuanRevisiAbsen()
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#22c55e'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Pengajuan Revisi Absen</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Pengajuan Revisi Absen */}
 
             {/* Confirm Dialog */}
             <ConfirmDialog
@@ -1736,12 +2020,42 @@ export default function HomeScreen({ navigation }) {
                             }}>
                             <MaterialCommunityIcons
                                 name="calendar"
-                                style={[styles.postIcon, { color: 'white' }]}
+                                style={[styles.postIcon, { color: 'white', transform: [{ translateY: -7 }] }]}
                                 size={40}
                             />
                             <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Pengajuan Cuti</Text>
                         </TouchableOpacity>
-                        <View style={{ flex: 1 }}></View>
+                        <TouchableOpacity
+                            disabled={!buttonPengajuanRevisiAbsenEnabled}
+                            onPress={() => {
+                                if (buttonPengajuanRevisiAbsenEnabled) {
+                                    setShowModalPengajuanRevisiAbsen(true)
+                                }
+                            }}
+                            style={{
+                                opacity: buttonPengajuanRevisiAbsenEnabled ? 1 : 0.55,
+                                shadowColor: '#000',
+                                shadowOffset: {
+                                    width: 0,
+                                    height: 1,
+                                },
+                                shadowOpacity: 0.18,
+                                shadowRadius: 1.0,
+                                flex: 1,
+                                backgroundColor: '#3498db',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                paddingVertical: 12,
+                                borderRadius: 5
+                            }}>
+                            <MaterialCommunityIcons
+                                name="calendar-edit"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={40}
+                            />
+                            <Text style={{ marginTop: 5, color: 'white', textAlign: 'center', fontWeight: '500' }}>Pengajuan Revisi Absen</Text>
+                        </TouchableOpacity>
                         <View style={{ flex: 1 }}></View>
                     </View>
                 </View>

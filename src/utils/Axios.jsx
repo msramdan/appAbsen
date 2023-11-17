@@ -1,10 +1,7 @@
 import axios from "axios";
 
 const Axios = axios.create({
-    headers: {
-        'Access-Control-Allow-Origin': true,
-    },
-    baseURL: 'https://ccc4-140-213-176-122.ngrok-free.app/api/mobile',
+    baseURL: 'https://3043-140-213-166-221.ngrok-free.app/api/mobile',
 })
 
 export default Axios
