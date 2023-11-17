@@ -5,6 +5,7 @@ import {
     ScrollView,
     FlatList,
     StyleSheet,
+    TouchableOpacity,
 } from 'react-native';
 
 import React, { useState, useEffect } from 'react';
@@ -38,22 +39,16 @@ export default function PostsIndexScreen() {
      */
     const [loadingNews, setLoadingNews] = useState(true)
 
-    //init state
-    const [posts, setPosts] = useState([]);
-    const [nextPageURL, setNextPageURL] = useState(null);
-    const [loadingLoadMore, setLoadingLoadMore] = useState(false);
-
-    //hook useEffect
     useEffect(() => {
-        //call method "fetchDataPosts"
         loadNews();
     }, []);
 
+    const loadNews = async (apiSourceUrl = '') => {
 
-    const loadNews = async () => {
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get('/news', {
+        setLoadingNews(true)
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/news', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
@@ -69,32 +64,10 @@ export default function PostsIndexScreen() {
         })
     }
 
-    //method getNextData
-    const getNextData = async () => {
-        //set loading true
-        setLoadingLoadMore(true);
-
-        if (nextPageURL != null) {
-            await Api.get(nextPageURL).then(response => {
-                //assign data to state
-                setPosts([...posts, ...response.data.data.data]);
-
-                //assign nextPageURL to state
-                setNextPageURL(response.data.data.next_page_url);
-
-                //set loading false
-                setLoadingLoadMore(false);
-            });
-        } else {
-            // no data next page
-            setLoadingLoadMore(false);
-        }
-    };
-
     return (
         <SafeAreaView>
             <ScrollView style={{ padding: 15 }}>
-                {/* posts / berita */}
+
                 <View style={styles.labelContainer}>
                     <MaterialCommunityIcons
                         name="newspaper-variant-multiple"
@@ -103,25 +76,64 @@ export default function PostsIndexScreen() {
                     />
                     <Text style={styles.labelText}>BERITA</Text>
                 </View>
-                <View>
-                    {loadingNews ? (
-                        <Loading />
-                    ) : (
-                        <>
-                            <FlatList
-                                style={styles.container}
-                                data={news}
-                                renderItem={({ item, index, separators }) => (
-                                    <ListPost data={item} index={index} />
-                                )}
-                                eyExtractor={item => item.id}
-                                scrollEnabled={false}
-                                onEndReached={getNextData}
-                                onEndReachedThreshold={0.5}
-                            />
-                            {loadingLoadMore ? <Loading /> : null}
-                        </>
-                    )}
+
+                <View
+                    style={styles.newsContainer}
+                >
+                    <View>
+                        <View>
+                            {loadingNews ? (
+                                <Loading />
+                            ) : (
+                                <>
+                                    <FlatList
+                                        style={styles.container}
+                                        data={news.data}
+                                        renderItem={({ item, index, separators }) => (
+                                            <ListPost data={item} index={index} />
+                                        )}
+                                        eyExtractor={item => item.id}
+                                        scrollEnabled={false}
+                                    />
+
+                                    <View
+                                        style={styles.wrapperPrevNextButton}
+                                    >
+                                        {
+                                            news.prev_page_url ?
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        const splittedUrl = news.prev_page_url.split('/api/mobile')
+
+                                                        loadNews(splittedUrl[splittedUrl.length - 1])
+                                                    }}
+                                                    style={styles.prevNextButton}
+                                                >
+                                                    <Text
+                                                        style={styles.prevNextButtonText}
+                                                    >Sebelumnya</Text>
+                                                </TouchableOpacity> : <></>
+                                        }
+                                        {
+                                            news.next_page_url ?
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        const splittedUrl = news.next_page_url.split('/api/mobile')
+
+                                                        loadNews(splittedUrl[splittedUrl.length - 1])
+                                                    }}
+                                                    style={styles.prevNextButton}
+                                                >
+                                                    <Text
+                                                        style={styles.prevNextButtonText}
+                                                    >Selanjutnya</Text>
+                                                </TouchableOpacity> : <></>
+                                        }
+                                    </View>
+                                </>
+                            )}
+                        </View>
+                    </View>
                 </View>
             </ScrollView>
         </SafeAreaView>
@@ -149,4 +161,25 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginBottom: 20,
     },
+    newsContainer: {
+        paddingBottom: 150
+    },
+    wrapperPrevNextButton: {
+        flexDirection: 'row',
+        gap: 9,
+        marginTop: -10
+    },
+    prevNextButton: {
+        paddingVertical: 7,
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#0ea5e9',
+        borderRadius: 6,
+        backgroundColor: 'white'
+    },
+    prevNextButtonText: {
+        color: '#0ea5e9',
+        fontWeight: '500',
+        textAlign: 'center'
+    }
 });

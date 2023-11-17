@@ -2,18 +2,15 @@ import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
 
 import React, { useEffect } from 'react';
 
-//import useNavigation
 import { useNavigation } from '@react-navigation/native';
 
-//import material icons
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
-//import momen js
 import moment from 'moment';
 import 'moment/locale/id';
 
 export default function ListPost({ data }) {
-    //ini navigation
+
     const navigation = useNavigation();
 
     return (

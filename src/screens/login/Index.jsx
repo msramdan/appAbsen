@@ -1,5 +1,5 @@
 // LoginScreen.js
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     TextInput,
@@ -13,12 +13,19 @@ import {
 import Axios from '../../utils/Axios';
 import { useToast } from 'react-native-toast-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useIsFocused } from '@react-navigation/native';
 
 const LoginScreen = ({ navigation }) => {
     const [employeeId, setEmployeeId] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const toast = useToast();
+    const focused = useIsFocused()
+
+    useEffect(() => {
+        setEmployeeId('')
+        setPassword('')
+    }, [focused])
 
     const handleLogin = async () => {
         if (!employeeId || !password) {

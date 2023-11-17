@@ -51,7 +51,7 @@ import Axios from '../../utils/Axios';
 import { Redirect } from '../../utils/Redirect';
 import DatePicker from 'react-native-date-picker';
 import moment from 'moment';
-
+import 'moment/locale/id';
 export default function HomeScreen({ navigation }) {
 
     /**
