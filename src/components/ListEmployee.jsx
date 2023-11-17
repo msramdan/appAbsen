@@ -2,7 +2,9 @@ import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function ListEmployee({ employee }) {
     return (
-        <TouchableOpacity>
+        <TouchableOpacity
+            disabled={true}
+        >
             <View style={styles.card}>
                 <Image source={require('./../assets/images/no-photo.png')} style={styles.image} />
                 <View style={styles.employeeDetailWrapper}>

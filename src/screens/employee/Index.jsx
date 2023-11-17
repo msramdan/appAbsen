@@ -5,6 +5,7 @@ import {
     ScrollView,
     FlatList,
     StyleSheet,
+    TouchableOpacity,
 } from 'react-native';
 
 import React, { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect } from '../../utils/Redirect';
 
 export default function EmployeeScreen({ navigation }) {
+
     const [employees, setEmployees] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
 
@@ -24,12 +26,12 @@ export default function EmployeeScreen({ navigation }) {
         loadDataEmployee();
     }, []);
 
-    const loadDataEmployee = async () => {
+    const loadDataEmployee = async (apiSourceUrl = null) => {
         setLoadingPosts(true);
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        await Axios.get('/employees', {
+        await Axios.get(apiSourceUrl ? apiSourceUrl : '/employees', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
@@ -58,14 +60,16 @@ export default function EmployeeScreen({ navigation }) {
                     />
                     <Text style={styles.labelText}>EMPLOYEES</Text>
                 </View>
-                <View>
+                <View
+                    style={styles.employeeListsContainer}
+                >
                     {loadingPosts ? (
                         <Loading />
                     ) : (
                         <>
                             <FlatList
                                 style={styles.container}
-                                data={employees}
+                                data={employees.data}
                                 renderItem={({ item, index, separators }) => (
                                     <ListEmployee employee={item} index={index} />
                                 )}
@@ -73,6 +77,43 @@ export default function EmployeeScreen({ navigation }) {
                                 scrollEnabled={false}
                                 onEndReachedThreshold={0.5}
                             />
+
+                            {/* Pagination */}
+                            <View
+                                style={styles.wrapperPrevNextButton}
+                            >
+                                {
+                                    employees.prev_page_url ?
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                const splittedUrl = employees.prev_page_url.split('/api/mobile')
+
+                                                loadDataEmployee(splittedUrl[splittedUrl.length - 1])
+                                            }}
+                                            style={styles.prevNextButton}
+                                        >
+                                            <Text
+                                                style={styles.prevNextButtonText}
+                                            >Sebelumnya</Text>
+                                        </TouchableOpacity> : <></>
+                                }
+                                {
+                                    employees.next_page_url ?
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                const splittedUrl = employees.next_page_url.split('/api/mobile')
+
+                                                loadDataEmployee(splittedUrl[splittedUrl.length - 1])
+                                            }}
+                                            style={styles.prevNextButton}
+                                        >
+                                            <Text
+                                                style={styles.prevNextButtonText}
+                                            >Selanjutnya</Text>
+                                        </TouchableOpacity> : <></>
+                                }
+                            </View>
+                            {/* End of Pagination */}
                         </>
                     )}
                 </View>
@@ -102,4 +143,25 @@ const styles = StyleSheet.create({
         marginTop: 10,
         marginBottom: 20,
     },
+    employeeListsContainer: {
+        paddingBottom: 150
+    },
+    wrapperPrevNextButton: {
+        flexDirection: 'row',
+        gap: 9,
+        marginTop: -10
+    },
+    prevNextButton: {
+        paddingVertical: 7,
+        flex: 1,
+        borderWidth: 1,
+        borderColor: '#0ea5e9',
+        borderRadius: 6,
+        backgroundColor: 'white'
+    },
+    prevNextButtonText: {
+        color: '#0ea5e9',
+        fontWeight: '500',
+        textAlign: 'center'
+    }
 });

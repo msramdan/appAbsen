@@ -43,7 +43,7 @@ export default function PostsIndexScreen() {
         loadNews();
     }, []);
 
-    const loadNews = async (apiSourceUrl = '') => {
+    const loadNews = async (apiSourceUrl = null) => {
 
         const token = await AsyncStorage.getItem('apiToken')
 
@@ -96,6 +96,7 @@ export default function PostsIndexScreen() {
                                         scrollEnabled={false}
                                     />
 
+                                    {/* Pagination */}
                                     <View
                                         style={styles.wrapperPrevNextButton}
                                     >
@@ -130,6 +131,7 @@ export default function PostsIndexScreen() {
                                                 </TouchableOpacity> : <></>
                                         }
                                     </View>
+                                    {/* End of Pagination */}
                                 </>
                             )}
                         </View>
