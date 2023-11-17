@@ -66,6 +66,15 @@ export default function HomeScreen({ navigation }) {
     const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState([])
     const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState([])
     const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState([])
+    const [arrHistoryPengajuanIzinSakit, setArrHistoryPengajuanIzinSakit] = useState([])
+
+    /**
+     * History Pengajuan Izin / Sakit Utils State
+     * 
+     */
+    const [loadingHistoryPengajuanIzinSakit, setLoadingHistoryPengajuanIzinSakit] = useState(true)
+    const [objDetailHistoryPengajuanIzinSakit, setObjDetailHistoryPengajuanIzinSakit] = useState({})
+    const [showModalDetailHistoryPengajuanIzinSakit, setShowModalDetailHistoryPengajuanIzinSakit] = useState(false)
 
     /**
      * History Pengajuan Cuti Utils State
@@ -183,6 +192,7 @@ export default function HomeScreen({ navigation }) {
         loadEmployeesTodayNotPreset()
         loadArrHistoryPresenceMonthly()
         loadArrHistoryPengajuanCuti()
+        loadArrHistoryPengajuanIzinSakit()
     }, [])
 
     useEffect(() => {
@@ -243,6 +253,26 @@ export default function HomeScreen({ navigation }) {
                 setArrHistoryPengajuanCuti(res.data.data)
 
                 setLoadingHistoryPengajuanCuti(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
+
+    const loadArrHistoryPengajuanIzinSakit = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/attendances/current-employee-pengajuan-izin-sakit', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setArrHistoryPengajuanIzinSakit(res.data.data)
+
+                setLoadingHistoryPengajuanIzinSakit(false)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
@@ -1609,11 +1639,6 @@ export default function HomeScreen({ navigation }) {
                         <View
                             style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
                         >
-                            {
-                                loadingDoPengajuanRevisiAbsen ?
-                                    <Loading style={styles.loading} /> : <></>
-                            }
-
                             <Text
                                 style={{
                                     textAlign: 'center',
@@ -1831,6 +1856,181 @@ export default function HomeScreen({ navigation }) {
                 </View>
             </Modal>
             {/* End of Modal Pengajuan Revisi Absen */}
+
+            {/* Modal Detail History Pengajuan Izin / Sakit */}
+            <Modal isVisible={showModalDetailHistoryPengajuanIzinSakit}>
+                <View style={{ flex: 1, justifyContent: 'center' }}>
+                    <View>
+                        <View
+                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                        >
+                            <Text
+                                style={{
+                                    textAlign: 'center',
+                                    fontSize: 20,
+                                    fontWeight: '500',
+                                    marginBottom: 20
+                                }}
+                            >Detail History Pengajuan Izin / Sakit</Text>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <View>
+                                        <Text style={{
+                                            marginBottom: 5
+                                        }}>Tanggal</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Tanggal"
+                                            editable={false}
+                                            value={objDetailHistoryPengajuanIzinSakit.date}
+                                        />
+                                    </View>
+
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>Description</Text>
+                                    <TextInput
+                                        style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                        placeholder="Tanggal Awal"
+                                        editable={false}
+                                        value={objDetailHistoryPengajuanIzinSakit.description}
+                                    />
+                                </View>
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>Detailed Description</Text>
+                                    <TextInput
+                                        style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                        placeholder="Detailed Description"
+                                        multiline={true}
+                                        numberOfLines={3}
+                                        editable={false}
+                                        value={objDetailHistoryPengajuanIzinSakit.detailed_description}
+                                    />
+                                </View>
+
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>File Dokumen</Text>
+                                    {
+                                        objDetailHistoryPengajuanIzinSakit.file_attachment ?
+                                            <View>
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        Linking.openURL(objDetailHistoryPengajuanIzinSakit.file_attachment)
+                                                    }}
+                                                    style={{
+                                                        backgroundColor: '#0ea5e9',
+                                                        width: 100,
+                                                        paddingVertical: 6,
+                                                        paddingHorizontal: 10,
+                                                        borderRadius: 4
+                                                    }}
+                                                >
+                                                    <Text
+                                                        style={{
+                                                            textAlign: 'center',
+                                                            fontWeight: '500',
+                                                            color: '#FFF'
+                                                        }}
+                                                    >Lihat File</Text>
+                                                </TouchableOpacity>
+                                            </View> : <Text style={{ color: '#333', fontWeight: '500' }}>Tidak ada file dokumen</Text>
+                                    }
+
+                                    <View>
+                                        <Text style={{
+                                            marginTop: 8,
+                                            marginBottom: 5
+                                        }}>Status</Text>
+                                        <Text style={{ backgroundColor: `${objDetailHistoryPengajuanIzinSakit.status == 'Waiting' ? '#1e293b' : `${objDetailHistoryPengajuanIzinSakit.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, borderRadius: 3 }}>{
+                                            objDetailHistoryPengajuanIzinSakit.status
+                                        }</Text>
+                                    </View>
+                                    <View>
+                                        <Text style={{
+                                            marginTop: 8,
+                                            marginBottom: 5
+                                        }}>Note Review</Text>
+                                        <TextInput
+                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            placeholder="Note Review"
+                                            editable={false}
+                                            multiline={true}
+                                            numberOfLines={3}
+                                            value={objDetailHistoryPengajuanIzinSakit.note_review}
+                                        />
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={{
+                                        marginVertical: 20,
+                                        backgroundColor: '#cbd5e1',
+                                        height: 2,
+                                        width: Dimensions.get('window').width - 100
+                                    }}
+                                ></View>
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        flexDirection: 'row',
+                                        gap: 10
+                                    }}
+                                >
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowModalDetailHistoryPengajuanIzinSakit(false)
+                                        }}
+                                        style={{
+                                            paddingVertical: 15,
+                                            borderRadius: 5,
+                                            flex: 1,
+                                            backgroundColor: '#64748b'
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                fontSize: 16,
+                                                fontWeight: '500',
+                                                textAlign: 'center',
+                                                color: '#FFF'
+                                            }}
+                                        >Tutup</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+            {/* End of Modal Detail History Pengajuan Izin / Sakit */}
 
             {/* Modal Detail History Pengajuan Cuti */}
             <Modal isVisible={showModalDetailHistoryPengajuanCuti}>
@@ -2436,6 +2636,110 @@ export default function HomeScreen({ navigation }) {
 
                 </View>
                 {/* End of List History Absen Diri Sendiri */}
+
+                {/* List History PENGAJUAN IZIN / SAKIT */}
+                <View style={{ marginTop: -10 }}>
+                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
+                        <MaterialCommunityIcons
+                            name="history"
+                            style={styles.postIcon}
+                            size={20}
+                        />
+
+                        <Text style={styles.postText}>HISTORY PENGAJUAN IZIN / SAKIT</Text>
+                    </View>
+                    {
+                        loadingHistoryPengajuanIzinSakit ?
+                            <Loading /> :
+                            <>
+
+                                <View
+                                    style={{
+                                        backgroundColor: 'white',
+                                        padding: 10,
+                                        borderRadius: 10,
+                                        shadowColor: '#000',
+                                        shadowOffset: {
+                                            width: 0,
+                                            height: 1,
+                                        },
+                                        shadowOpacity: 0.18,
+                                        shadowRadius: 1.0,
+                                        elevation: 1
+                                    }}
+                                >
+                                    <View
+                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                    >
+                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Tanggal</Text>
+                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Desc</Text>
+                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
+                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Aksi</Text>
+                                    </View>
+                                    {
+                                        arrHistoryPengajuanIzinSakit.map((historyPengajuanIzinSakit, index) => (
+                                            <View
+                                                key={index}
+                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                            >
+                                                <Text style={{ flex: 4 }}>{moment(historyPengajuanIzinSakit.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
+                                                <Text style={{ flex: 3 }}>{historyPengajuanIzinSakit.description}</Text>
+                                                <View style={{ flex: 5 }}>
+                                                    <Text style={{ flex: 6, backgroundColor: `${historyPengajuanIzinSakit.status == 'Waiting' ? '#1e293b' : `${historyPengajuanIzinSakit.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                        historyPengajuanIzinSakit.status
+                                                    }</Text>
+                                                </View>
+                                                <Text style={{ flex: 4 }}>
+                                                    <View>
+                                                        <TouchableOpacity
+                                                            onPress={() => {
+                                                                setObjDetailHistoryPengajuanIzinSakit(historyPengajuanIzinSakit)
+                                                                setShowModalDetailHistoryPengajuanIzinSakit(true)
+                                                            }}
+                                                            style={{ backgroundColor: '#3b82f6', paddingVertical: 2, paddingHorizontal: 5, alignSelf: 'flex-start', borderRadius: 3 }}
+                                                        >
+                                                            <View
+                                                                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                                            >
+                                                                <MaterialCommunityIcons
+                                                                    name="information-outline"
+                                                                    style={{ color: 'white' }}
+                                                                    size={20}
+                                                                />
+                                                                <Text
+                                                                    style={{ color: 'white', fontWeight: '500', fontSize: 12, paddingRight: 3 }}
+                                                                >Detail</Text>
+                                                            </View>
+                                                        </TouchableOpacity>
+                                                    </View>
+                                                </Text>
+                                            </View>
+                                        ))
+                                    }
+                                </View>
+                                {/* <View>
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#3498db',
+                                            alignSelf: 'center',
+                                            paddingVertical: 7,
+                                            paddingHorizontal: 20,
+                                            borderRadius: 7,
+                                            marginTop: 15
+                                        }}
+                                    >
+                                        <Text
+                                            style={{
+                                                color: 'white'
+                                            }}
+                                        >Tampilkan Lebih Banyak</Text>
+                                    </TouchableOpacity>
+                                </View> */}
+                            </>
+                    }
+
+                </View>
+                {/* End of List History PENGAJUAN IZIN / SAKIT */}
 
                 {/* List History Pengajuan Cuti */}
                 <View style={{ marginBottom: 560, marginTop: -10 }}>
