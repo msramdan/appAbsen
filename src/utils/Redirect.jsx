@@ -1,5 +1,7 @@
 export const Redirect = {
     toLoginScreen: (navigation) => {
-        navigation.navigate('Login')
+        navigation.navigate('Login', {
+            is_logout: true
+        })
     }
 }

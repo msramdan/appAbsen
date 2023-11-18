@@ -44,7 +44,9 @@ export default function Photoscreen({ navigation }) {
 
     const doLogout = () => {
         AsyncStorage.removeItem('apiToken')
-        navigation.navigate('Login')
+        navigation.navigate('Login', {
+            is_logout: true
+        })
     }
 
     return (

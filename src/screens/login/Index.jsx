@@ -9,23 +9,68 @@ import {
     Animated,
     Image,
     Alert,
+    SafeAreaView,
+    BackHandler,
+    Dimensions,
 } from 'react-native';
 import Axios from '../../utils/Axios';
 import { useToast } from 'react-native-toast-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
+import Loading from '../../components/Loading';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation, route }) => {
     const [employeeId, setEmployeeId] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const toast = useToast();
     const focused = useIsFocused()
+    const [cacheLoginCheck, setCacheLoginCheck] = useState(false)
+
+    useEffect(() => {
+        checkLogin()
+    }, [])
 
     useEffect(() => {
         setEmployeeId('')
         setPassword('')
+
+        if (route.params && focused) {
+            if (route.params.is_logout) {
+                setCacheLoginCheck(true)
+            }
+        }
+
+        if (focused) {
+            const backHandler = BackHandler.addEventListener('hardwareBackPress', function () {
+                BackHandler.exitApp()
+                return () => { }
+            });
+
+            return () => backHandler.remove()
+        } else {
+            return () => { }
+        }
     }, [focused])
+
+    const checkLogin = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+        console.log('okaa')
+
+        if (token) {
+            Axios.get(`/auth/employee`, {
+                headers: {
+                    Authorization: 'Bearer ' + token
+                }
+            }).then(async (res) => {
+                navigation.navigate('HomeScreen')
+            }).catch(() => {
+                setCacheLoginCheck(true)
+            })
+        } else {
+            setCacheLoginCheck(true)
+        }
+    }
 
     const handleLogin = async () => {
         if (!employeeId || !password) {
@@ -52,36 +97,52 @@ const LoginScreen = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
-            <Image
-                source={require('../../assets/images/login.png')}
-                style={styles.logo}
-            />
-            <Animated.View style={[styles.card]}>
-                <Text style={styles.cardLabel}>Please Sign In</Text>
-                <TextInput
-                    style={styles.input}
-                    placeholder="Employee ID"
-                    value={employeeId}
-                    onChangeText={text => setEmployeeId(text)}
-                />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Password"
-                    secureTextEntry
-                    value={password}
-                    onChangeText={text => setPassword(text)}
-                />
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={handleLogin}
-                    disabled={loading}>
-                    <Text style={styles.buttonText}>
-                        {loading ? 'Signing In...' : 'Sign In'}
-                    </Text>
-                </TouchableOpacity>
-            </Animated.View>
-        </View>
+        <SafeAreaView
+            style={{ backgroundColor: 'white', height: '100%' }}
+        >
+            {
+                cacheLoginCheck ?
+                    <View style={styles.container}>
+                        {
+                            loading ?
+                                <Loading style={styles.loading} />
+                                : <></>
+                        }
+
+                        <Image
+                            source={require('../../assets/images/login.png')}
+                            style={styles.logo}
+                        />
+                        <Animated.View style={[styles.card]}>
+                            <Text style={styles.cardLabel}>Please Sign In</Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Employee ID"
+                                value={employeeId}
+                                onChangeText={text => setEmployeeId(text)}
+                            />
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Password"
+                                secureTextEntry
+                                value={password}
+                                onChangeText={text => setPassword(text)}
+                            />
+                            <TouchableOpacity
+                                style={styles.button}
+                                onPress={handleLogin}
+                                disabled={loading}>
+                                <Text style={styles.buttonText}>
+                                    {loading ? 'Signing In...' : 'Sign In'}
+                                </Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </View> : <></>
+
+            }
+
+        </SafeAreaView>
+
     );
 };
 
@@ -133,6 +194,13 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
+    loading: {
+        position: 'absolute',
+        width: Dimensions.get('window').width,
+        height: Dimensions.get('window').height,
+        zIndex: 999999999,
+        backgroundColor: 'rgba(0, 0, 0, 0.2)'
+    }
 });
 
 export default LoginScreen;
