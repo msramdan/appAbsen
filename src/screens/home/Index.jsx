@@ -62,7 +62,7 @@ export default function HomeScreen({ navigation }) {
     const [news, setNews] = useState([])
     const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState([])
     const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState({})
-    const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState([])
+    const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState({})
     const [arrHistoryPengajuanIzinSakit, setArrHistoryPengajuanIzinSakit] = useState({})
     const [arrHistoryPengajuanRevisiAbsen, setArrHistoryPengajuanRevisiAbsen] = useState([])
 
@@ -251,23 +251,32 @@ export default function HomeScreen({ navigation }) {
         })
     }
 
-    const loadArrHistoryPengajuanCuti = async () => {
+    const loadArrHistoryPengajuanCuti = async (apiSourceUrl = null) => {
+        setLoadingHistoryPengajuanCuti(true)
+
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get('/attendances/current-employee-pengajuan-cuti', {
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-cuti', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
             if (res) {
-                setArrHistoryPengajuanCuti(res.data.data)
+                if (arrHistoryPengajuanCuti.data && apiSourceUrl) {
+                    const dataHistoryPengajuanCuti = [...arrHistoryPengajuanCuti.data]
 
-                setLoadingHistoryPengajuanCuti(false)
+                    dataHistoryPengajuanCuti.push.apply(dataHistoryPengajuanCuti, res.data.data.data)
+                    res.data.data.data = dataHistoryPengajuanCuti
+                }
+
+                setArrHistoryPengajuanCuti(res.data.data)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
                 Redirect.toLoginScreen(navigation)
             }
+        }).finally(() => {
+            setLoadingHistoryPengajuanCuti(false)
         })
     }
 
@@ -2467,63 +2476,69 @@ export default function HomeScreen({ navigation }) {
                                         <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
                                     </View>
                                     {
-                                        arrHistoryPengajuanCuti.map((historyPengajuanCuti, index) => (
-                                            <View
-                                                key={index}
-                                                style={styles.listTableTbody}
-                                            >
-                                                <Text style={{ flex: 4 }}>{moment(historyPengajuanCuti.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
-                                                <View style={{ flex: 5 }}>
-                                                    <Text style={{ flex: 6, backgroundColor: `${historyPengajuanCuti.status == 'Waiting' ? '#1e293b' : `${historyPengajuanCuti.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
-                                                        historyPengajuanCuti.status
-                                                    }</Text>
-                                                </View>
-                                                <Text style={{ flex: 3 }}>
-                                                    <View>
-                                                        <TouchableOpacity
-                                                            onPress={() => {
-                                                                setObjDetailHistoryPengajuanCuti(historyPengajuanCuti)
-                                                                setShowModalDetailHistoryPengajuanCuti(true)
-                                                            }}
-                                                            style={styles.buttonTableDataDetail}
-                                                        >
-                                                            <View
-                                                                style={styles.buttonTableDataDetailInner}
-                                                            >
-                                                                <MaterialCommunityIcons
-                                                                    name="information-outline"
-                                                                    style={{ color: 'white' }}
-                                                                    size={20}
-                                                                />
-                                                                <Text
-                                                                    style={styles.buttonTableDataDetailText}
-                                                                >Detail</Text>
-                                                            </View>
-                                                        </TouchableOpacity>
+                                        <FlatList
+                                            data={arrHistoryPengajuanCuti.data}
+                                            renderItem={({ item, index, separators }) => (
+                                                <View
+                                                    key={index}
+                                                    style={styles.listTableTbody}
+                                                >
+                                                    <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
+                                                    <View style={{ flex: 5 }}>
+                                                        <Text style={{ flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                            item.status
+                                                        }</Text>
                                                     </View>
-                                                </Text>
-                                            </View>
-                                        ))
+                                                    <Text style={{ flex: 3 }}>
+                                                        <View>
+                                                            <TouchableOpacity
+                                                                onPress={() => {
+                                                                    setObjDetailHistoryPengajuanCuti(item)
+                                                                    setShowModalDetailHistoryPengajuanCuti(true)
+                                                                }}
+                                                                style={styles.buttonTableDataDetail}
+                                                            >
+                                                                <View
+                                                                    style={styles.buttonTableDataDetailInner}
+                                                                >
+                                                                    <MaterialCommunityIcons
+                                                                        name="information-outline"
+                                                                        style={{ color: 'white' }}
+                                                                        size={20}
+                                                                    />
+                                                                    <Text
+                                                                        style={styles.buttonTableDataDetailText}
+                                                                    >Detail</Text>
+                                                                </View>
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    </Text>
+                                                </View>
+                                            )}
+                                            keyExtractor={item => item.id}
+                                            scrollEnabled={false}
+                                        />
                                     }
                                 </View>
-                                {/* <View>
-                                    <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#3498db',
-                                            alignSelf: 'center',
-                                            paddingVertical: 7,
-                                            paddingHorizontal: 20,
-                                            borderRadius: 7,
-                                            marginTop: 15
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                color: 'white'
-                                            }}
-                                        >Tampilkan Lebih Banyak</Text>
-                                    </TouchableOpacity>
-                                </View> */}
+                                {
+                                    arrHistoryPengajuanCuti.next_page_url ?
+                                        <View>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    const splittedUrl = arrHistoryPengajuanCuti.next_page_url.split('/api/mobile')
+
+                                                    loadArrHistoryPengajuanCuti(splittedUrl[splittedUrl.length - 1])
+                                                }}
+                                                style={styles.buttonListTableViewMore}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: 'white'
+                                                    }}
+                                                >Tampilkan Lebih Banyak</Text>
+                                            </TouchableOpacity>
+                                        </View> : <></>
+                                }
                             </>
                     }
 
