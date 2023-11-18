@@ -162,6 +162,7 @@ export default function HomeScreen({ navigation }) {
     const [buttonClockOutEnabled, setButtonClockOutEnabled] = useState(false)
     const [showModalClockOut, setShowModalClockOut] = useState(false)
     const [photoClockOut, setPhotoClockOut] = useState(null)
+    const [activityClockOut, setActivityClockOut] = useState('')
     const [errorMessageDoClockOut, setErrorMessageDoClockOut] = useState(null)
     const [loadingDoClockOut, setLoadingDoClockOut] = useState(false)
     const [fileAttachmentIzinOrSakit, setfileAttachmentIzinOrSakit] = useState(null)
@@ -199,13 +200,27 @@ export default function HomeScreen({ navigation }) {
     useEffect(() => {
         if (!stateTodayPresence && !stateTodayIzinOrSakit) {
             setButtonClockInEnabled(true)
+        } else {
+            if (stateTodayIzinOrSakit) {
+                if (stateTodayIzinOrSakit.status == 'Rejected') {
+                    setButtonClockInEnabled(true)
+                } else {
+                    setButtonClockInEnabled(false)
+                }
+            } else {
+                setButtonClockInEnabled(false)
+            }
         }
     }, [stateTodayPresence, stateTodayIzinOrSakit])
 
     useEffect(() => {
         if (stateTodayIzinOrSakit) {
-            if (stateTodayIzinOrSakit.status == 'Rejected') {
+            if (stateTodayPresence) {
+                setButtonIzinOrSakitEnabled(false)
+            } else if (stateTodayIzinOrSakit.status == 'Rejected') {
                 setButtonIzinOrSakitEnabled(true)
+            } else {
+                setButtonIzinOrSakitEnabled(false)
             }
         } else {
             if (stateTodayPresence) {
@@ -367,44 +382,6 @@ export default function HomeScreen({ navigation }) {
         })
     }
 
-    const loadBanners = async () => {
-        const token = await AsyncStorage.getItem('apiToken')
-
-        Axios.get('/banners', {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        }).then((res) => {
-            if (res) {
-                setBanners(res.data.data)
-                setLoadingBanners(false)
-            }
-        }).catch((err) => {
-            if (err.response.status == 401) {
-                Redirect.toLoginScreen(navigation)
-            }
-        })
-    }
-
-    const loadNews = async () => {
-        const token = await AsyncStorage.getItem('apiToken')
-
-        Axios.get('/news', {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        }).then((res) => {
-            if (res) {
-                setNews(res.data.data)
-                setLoadingNews(false)
-            }
-        }).catch((err) => {
-            if (err.response.status == 401) {
-                Redirect.toLoginScreen(navigation)
-            }
-        })
-    }
-
     const loadStateTodayPresence = async () => {
         const token = await AsyncStorage.getItem('apiToken')
 
@@ -441,6 +418,55 @@ export default function HomeScreen({ navigation }) {
                     Redirect.toLoginScreen(navigation)
                 }
             })
+    }
+
+    const refreshListDataAndStatusData = () => {
+        loadStateTodayPresence()
+        loadStateTodayIzinOrSakit()
+
+        loadArrHistoryPresenceMonthly()
+        loadArrHistoryPengajuanCuti()
+        loadArrHistoryPengajuanIzinSakit()
+        loadArrHistoryPengajuanRevisiAbsen()
+        loadEmployeesTodayNotPreset()
+    }
+
+    const loadBanners = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/banners', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setBanners(res.data.data)
+                setLoadingBanners(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
+    }
+
+    const loadNews = async () => {
+        const token = await AsyncStorage.getItem('apiToken')
+
+        Axios.get('/news?size=5', {
+            headers: {
+                Authorization: 'Bearer ' + token
+            }
+        }).then((res) => {
+            if (res) {
+                setNews(res.data.data)
+                setLoadingNews(false)
+            }
+        }).catch((err) => {
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            }
+        })
     }
 
     const loadStateCurrentAuthEmployee = async () => {
@@ -543,13 +569,14 @@ export default function HomeScreen({ navigation }) {
         setLoadingDoClockIn(true)
 
         if (photoClockIn) {
-            permissionHandler(() => {
-                if (currentAuthEmployee.use_gps_location == 'Yes') {
+            if (currentAuthEmployee.use_gps_location == 'Yes') {
+                permissionHandler(() => {
+                    setLoadingDoClockIn(false)
                     doClockInUsingGPSFunc()
-                } else {
-                    doClockInWithoutGPSFunc()
-                }
-            })
+                })
+            } else {
+                doClockInWithoutGPSFunc()
+            }
         } else {
             setErrorMessageDoClockIn('Please, take your photo first')
             setLoadingDoClockIn(false)
@@ -560,14 +587,15 @@ export default function HomeScreen({ navigation }) {
         setErrorMessageDoClockOut(null)
         setLoadingDoClockOut(true)
 
-        if (photoClockOut) {
-            permissionHandler(() => {
-                if (currentAuthEmployee.use_gps_location == 'Yes') {
+        if (photoClockIn) {
+            if (currentAuthEmployee.use_gps_location == 'Yes') {
+                permissionHandler(() => {
+                    setLoadingDoClockOut(false)
                     doClockOutUsingGPSFunc()
-                } else {
-                    doClockOutWithoutGPSFunc()
-                }
-            })
+                })
+            } else {
+                doClockOutWithoutGPSFunc()
+            }
         } else {
             setErrorMessageDoClockOut('Please, take your photo first')
             setLoadingDoClockOut(false)
@@ -575,6 +603,25 @@ export default function HomeScreen({ navigation }) {
     }
 
     const doClockInWithoutGPSFunc = async () => {
+        axiosDoClockIn(position)
+    }
+
+    const doClockInUsingGPSFunc = async () => {
+        NetInfo.fetch().then(state => {
+            if (!state.isConnected) {
+                setErrorMessageDoClockIn('Periksa koneksi internet anda untuk melakukan absensi')
+            } else {
+                Geolocation.getCurrentPosition(
+                    async (position) => {
+                        axiosDoClockIn(position)
+                    })
+            }
+        });
+    }
+
+    const axiosDoClockIn = async (position = null) => {
+        setLoadingDoClockIn(true)
+
         const token = await AsyncStorage.getItem('apiToken')
 
         const formData = new FormData();
@@ -585,16 +632,19 @@ export default function HomeScreen({ navigation }) {
             name: photoClockIn.fileName,
         })
 
+        formData.append('latitude', position ? position.coords.latitude : null)
+        formData.append('longitude', position ? position.coords.longitude : null)
+
         Axios.post('/attendances/clock-in', formData, {
             headers: {
                 'Authorization': 'Bearer ' + token,
             }
         }).then((res) => {
             setShowModalClockIn(false)
-            loadStateTodayPresence()
-            loadStateTodayIzinOrSakit()
             setPhotoClockIn(null)
             setErrorMessageDoClockIn(null)
+
+            refreshListDataAndStatusData()
 
             setTimeout(() => {
                 toast.show('Clock In successfully', {
@@ -603,60 +653,35 @@ export default function HomeScreen({ navigation }) {
                 })
             }, 500);
         }).catch((err) => {
-            setErrorMessageDoClockIn(err.response.data.error)
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            } else {
+                setErrorMessageDoClockIn(err.response.data.error)
+            }
         }).finally(() => {
             setLoadingDoClockIn(false)
         })
     }
 
-    const doClockInUsingGPSFunc = async () => {
-        const token = await AsyncStorage.getItem('apiToken')
+    const doClockOutWithoutGPSFunc = async () => {
+        axiosDoClockOut()
+    }
 
+    const doClockOutUsingGPSFunc = async () => {
         NetInfo.fetch().then(state => {
             if (!state.isConnected) {
-                setErrorMessageDoClockIn('Periksa koneksi internet anda untuk melakukan absensi')
+                setErrorMessageDoClockOut('Periksa koneksi internet anda untuk melakukan absensi')
             } else {
                 Geolocation.getCurrentPosition(
                     async (position) => {
-                        const formData = new FormData();
-
-                        formData.append('photo', {
-                            uri: photoClockIn.uri,
-                            type: photoClockIn.type,
-                            name: photoClockIn.fileName,
-                        })
-
-                        formData.append('latitude', position.coords.latitude)
-                        formData.append('longitude', position.coords.longitude)
-
-                        Axios.post('/attendances/clock-in', formData, {
-                            headers: {
-                                'Authorization': 'Bearer ' + token,
-                            }
-                        }).then((res) => {
-                            setShowModalClockIn(false)
-                            loadStateTodayPresence()
-                            loadStateTodayIzinOrSakit()
-                            setPhotoClockIn(null)
-                            setErrorMessageDoClockIn(null)
-
-                            setTimeout(() => {
-                                toast.show('Clock In successfully', {
-                                    type: 'success',
-                                    placement: 'center'
-                                })
-                            }, 500);
-                        }).catch((err) => {
-                            setErrorMessageDoClockIn(err.response.data.error)
-                        }).finally(() => {
-                            setLoadingDoClockIn(false)
-                        })
+                        axiosDoClockOut(position)
                     })
             }
         });
     }
 
-    const doClockOutWithoutGPSFunc = async () => {
+    const axiosDoClockOut = async (position = null) => {
+        setLoadingDoClockOut(true)
         const token = await AsyncStorage.getItem('apiToken')
 
         const formData = new FormData();
@@ -667,16 +692,22 @@ export default function HomeScreen({ navigation }) {
             name: photoClockOut.fileName,
         })
 
+        formData.append('activity', activityClockOut)
+        formData.append('latitude', position ? position.coords.latitude : null)
+        formData.append('longitude', position ? position.coords.longitude : null)
+
         Axios.post('/attendances/clock-out', formData, {
             headers: {
                 'Authorization': 'Bearer ' + token,
             }
         }).then((res) => {
             setShowModalClockOut(false)
-            loadStateTodayPresence()
-            loadStateTodayIzinOrSakit()
+
             setPhotoClockOut(null)
             setErrorMessageDoClockOut(null)
+            setActivityClockOut('')
+
+            refreshListDataAndStatusData()
 
             setTimeout(() => {
                 toast.show('Clock Out successfully', {
@@ -685,57 +716,14 @@ export default function HomeScreen({ navigation }) {
                 })
             }, 500);
         }).catch((err) => {
-            setErrorMessageDoClockOut(err.response.data.error)
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            } else {
+                setErrorMessageDoClockOut(err.response.data.error)
+            }
         }).finally(() => {
             setLoadingDoClockOut(false)
         })
-    }
-
-    const doClockOutUsingGPSFunc = async () => {
-        const token = await AsyncStorage.getItem('apiToken')
-
-        NetInfo.fetch().then(state => {
-            if (!state.isConnected) {
-                setErrorMessageDoClockOut('Periksa koneksi internet anda untuk melakukan absensi')
-            } else {
-                Geolocation.getCurrentPosition(
-                    async (position) => {
-                        const formData = new FormData();
-
-                        formData.append('photo', {
-                            uri: photoClockOut.uri,
-                            type: photoClockOut.type,
-                            name: photoClockOut.fileName,
-                        })
-
-                        formData.append('latitude', position.coords.latitude)
-                        formData.append('longitude', position.coords.longitude)
-
-                        Axios.post('/attendances/clock-out', formData, {
-                            headers: {
-                                'Authorization': 'Bearer ' + token,
-                            }
-                        }).then((res) => {
-                            setShowModalClockOut(false)
-                            loadStateTodayPresence()
-                            loadStateTodayIzinOrSakit()
-                            setPhotoClockOut(null)
-                            setErrorMessageDoClockOut(null)
-
-                            setTimeout(() => {
-                                toast.show('Clock Out successfully', {
-                                    type: 'success',
-                                    placement: 'center'
-                                })
-                            }, 500);
-                        }).catch((err) => {
-                            setErrorMessageDoClockOut(err.response.data.error)
-                        }).finally(() => {
-                            setLoadingDoClockOut(false)
-                        })
-                    })
-            }
-        });
     }
 
     const doOpenDocumentPicker = async () => {
@@ -759,6 +747,7 @@ export default function HomeScreen({ navigation }) {
     }
 
     const doIzinOrSakit = async () => {
+        setLoadingDoIzinAtauSakit(true)
 
         setErrorMessageDoIzinAtauSakit(null)
         const formData = new FormData();
@@ -775,19 +764,19 @@ export default function HomeScreen({ navigation }) {
             })
         }
 
-        setLoadingDoIzinAtauSakit(true)
-
         Axios.post('/attendances/izin-or-sakit', formData, {
             headers: {
                 'Authorization': 'Bearer ' + token,
             }
         }).then((res) => {
             if (res) {
-                setShowModalIzinAtauSakit(false)
-                loadStateTodayPresence()
-                loadStateTodayIzinOrSakit()
+                refreshListDataAndStatusData()
+
                 setfileAttachmentIzinOrSakit(null)
                 setErrorMessageDoIzinAtauSakit(null)
+                setDetailedDescription('')
+
+                setShowModalIzinAtauSakit(false)
 
                 setTimeout(() => {
                     toast.show(res.data.msg, {
@@ -797,13 +786,18 @@ export default function HomeScreen({ navigation }) {
                 }, 500);
             }
         }).catch((err) => {
-            setErrorMessageDoIzinAtauSakit(err.response.data.error)
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            } else {
+                setErrorMessageDoIzinAtauSakit(err.response.data.error)
+            }
         }).finally(() => {
             setLoadingDoIzinAtauSakit(false)
         })
     }
 
     const doPengajuanCuti = async () => {
+        setLoadingDoPengajuanCuti(true)
         setErrorMessageDoPengajuanCuti(null)
 
         if (!fileAttachmentPengajuanCuti) {
@@ -824,8 +818,6 @@ export default function HomeScreen({ navigation }) {
             name: fileAttachmentPengajuanCuti.name,
         })
 
-        setLoadingDoPengajuanCuti(true)
-
         Axios.post('/attendances/pengajuan-cuti', formData, {
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -833,10 +825,15 @@ export default function HomeScreen({ navigation }) {
         }).then((res) => {
             if (res) {
                 setShowModalPengajuanCuti(false)
-                loadStateTodayPresence()
-                loadStateTodayIzinOrSakit()
+
+                setPengajuanCutiStartDate(new Date())
+                setPengajuanCutiEndDate(new Date())
+                setPengajuanCutiReason('')
                 setfileAttachmentPengajuanCuti(null)
+
                 setErrorMessageDoPengajuanCuti(null)
+
+                refreshListDataAndStatusData()
 
                 setTimeout(() => {
                     toast.show(res.data.msg, {
@@ -846,13 +843,18 @@ export default function HomeScreen({ navigation }) {
                 }, 500);
             }
         }).catch((err) => {
-            setErrorMessageDoPengajuanCuti(err.response.data.error)
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            } else {
+                setErrorMessageDoPengajuanCuti(err.response.data.error)
+            }
         }).finally(() => {
             setLoadingDoPengajuanCuti(false)
         })
     }
 
     const doPengajuanRevisiAbsen = async () => {
+        setLoadingDoPengajuanRevisiAbsen(true)
         setErrorMessageDoPengajuanRevisiAbsen(null)
 
         const formData = new FormData();
@@ -863,8 +865,6 @@ export default function HomeScreen({ navigation }) {
         formData.append('clock_out', `${pengajuanRevisiAbsenClockOut.getHours() > 9 ? pengajuanRevisiAbsenClockOut.getHours() : `0${pengajuanRevisiAbsenClockOut.getHours()}`}:${pengajuanRevisiAbsenClockOut.getMinutes() > 9 ? pengajuanRevisiAbsenClockOut.getMinutes() : `0${pengajuanRevisiAbsenClockOut.getMinutes()}`}`)
         formData.append('reason', pengajuanRevisiAbsenReason)
 
-        setLoadingDoPengajuanRevisiAbsen(true)
-
         Axios.post('/attendances/pengajuan-revisi-absen', formData, {
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -872,9 +872,15 @@ export default function HomeScreen({ navigation }) {
         }).then((res) => {
             if (res) {
                 setShowModalPengajuanRevisiAbsen(false)
-                loadStateTodayPresence()
-                loadStateTodayIzinOrSakit()
+
+                setPengajuanRevisiAbsenDate(new Date())
+                setPengajuanRevisiAbsenClockIn(new Date())
+                setPengajuanRevisiAbsenClockOut(new Date())
+                setPengajuanRevisiAbsenReason('')
+
                 setErrorMessageDoPengajuanRevisiAbsen(null)
+
+                refreshListDataAndStatusData()
 
                 setTimeout(() => {
                     toast.show(res.data.msg, {
@@ -884,7 +890,11 @@ export default function HomeScreen({ navigation }) {
                 }, 500);
             }
         }).catch((err) => {
-            setErrorMessageDoPengajuanRevisiAbsen(err.response.data.error)
+            if (err.response.status == 401) {
+                Redirect.toLoginScreen(navigation)
+            } else {
+                setErrorMessageDoPengajuanRevisiAbsen(err.response.data.error)
+            }
         }).finally(() => {
             setLoadingDoPengajuanRevisiAbsen(false)
         })
@@ -1057,6 +1067,33 @@ export default function HomeScreen({ navigation }) {
                                     </View>
 
                                 </TouchableOpacity>
+                            </View>
+
+                            <View
+                                style={{ alignItems: 'center' }}
+                            >
+                                <View
+                                    style={styles.modalHorizontalLine}
+                                >
+                                </View>
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>Activity</Text>
+                                    <TextInput
+                                        style={[styles.input, styles.enabledModalTextarea]}
+                                        placeholder="Activity"
+                                        multiline={true}
+                                        numberOfLines={3}
+                                        value={activityClockOut}
+                                        onChangeText={text => setActivityClockOut(text)}
+                                    />
+                                </View>
                             </View>
 
                             <View
@@ -2219,7 +2256,7 @@ export default function HomeScreen({ navigation }) {
                         <>
                             <FlatList
                                 style={{ flex: 1, marginTop: 10 }}
-                                data={news}
+                                data={news.data}
                                 renderItem={({ item, index, separators }) => (
                                     <ListPost data={item} index={index} />
                                 )}
