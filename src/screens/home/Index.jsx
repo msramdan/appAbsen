@@ -60,11 +60,11 @@ export default function HomeScreen({ navigation }) {
     const [currentAuthEmployee, setCurrentAuthEmployee] = useState({})
     const [banners, setBanners] = useState([])
     const [news, setNews] = useState([])
-    const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState([])
+    const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState({})
     const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState({})
     const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState({})
     const [arrHistoryPengajuanIzinSakit, setArrHistoryPengajuanIzinSakit] = useState({})
-    const [arrHistoryPengajuanRevisiAbsen, setArrHistoryPengajuanRevisiAbsen] = useState([])
+    const [arrHistoryPengajuanRevisiAbsen, setArrHistoryPengajuanRevisiAbsen] = useState({})
 
     /**
      * History Pengajuan Revisi Absen Utils State
@@ -310,43 +310,60 @@ export default function HomeScreen({ navigation }) {
         })
     }
 
-    const loadArrHistoryPengajuanRevisiAbsen = async () => {
+    const loadArrHistoryPengajuanRevisiAbsen = async (apiSourceUrl = null) => {
+        setLoadingHistoryPengajuanRevisiAbsen(true)
+
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get('/attendances/current-employee-pengajuan-revisi-absen', {
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-revisi-absen', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
             if (res) {
-                setArrHistoryPengajuanRevisiAbsen(res.data.data)
+                if (arrHistoryPengajuanRevisiAbsen.data && apiSourceUrl) {
+                    const dataHistoryPengajuanRevisiAbsenAppended = [...arrHistoryPengajuanRevisiAbsen.data]
 
-                setLoadingHistoryPengajuanRevisiAbsen(false)
+                    dataHistoryPengajuanRevisiAbsenAppended.push.apply(dataHistoryPengajuanRevisiAbsenAppended, res.data.data.data)
+                    res.data.data.data = dataHistoryPengajuanRevisiAbsenAppended
+                }
+
+                setArrHistoryPengajuanRevisiAbsen(res.data.data)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
                 Redirect.toLoginScreen(navigation)
             }
+        }).finally(() => {
+            setLoadingHistoryPengajuanRevisiAbsen(false)
         })
     }
 
-    const loadEmployeesTodayNotPreset = async () => {
+    const loadEmployeesTodayNotPreset = async (apiSourceUrl = null) => {
+        setLoadingEmployeesTodayNotPresent(true)
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get('/attendances/all-employees-today-not-present', {
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/all-employees-today-not-present', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
             if (res) {
-                setEmployeesTodayNotPreset(res.data.data)
+                if (employeesTodayNotPreset.data && apiSourceUrl) {
+                    const dataEmployeesTodayNotPresentAppended = [...employeesTodayNotPreset.data]
 
-                setLoadingEmployeesTodayNotPresent(false)
+                    dataEmployeesTodayNotPresentAppended.push.apply(dataEmployeesTodayNotPresentAppended, res.data.data.data)
+                    res.data.data.data = dataEmployeesTodayNotPresentAppended
+                }
+
+                setEmployeesTodayNotPreset(res.data.data)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
                 Redirect.toLoginScreen(navigation)
             }
+        }).finally(() => {
+            setLoadingEmployeesTodayNotPresent(false)
         })
     }
 
@@ -2240,36 +2257,49 @@ export default function HomeScreen({ navigation }) {
                                         <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Deskripsi</Text>
                                     </View>
                                     {
-                                        employeesTodayNotPreset.map((employeeTodayNotPreset, index) => (
-                                            <View
-                                                key={index}
-                                                style={styles.listTableTbody}
-                                            >
-                                                <Text style={{ flex: 1 }}>{index + 1}</Text>
-                                                <Text style={{ flex: 5 }}>{employeeTodayNotPreset.employee.full_name}</Text>
-                                                <Text style={{ flex: 3 }}>{employeeTodayNotPreset.description}</Text>
-                                            </View>
-                                        ))
+                                        <FlatList
+                                            data={employeesTodayNotPreset.data}
+                                            renderItem={({ item, index, separators }) => (
+                                                <View
+                                                    key={index}
+                                                    style={styles.listTableTbody}
+                                                >
+                                                    <Text style={{ flex: 1 }}>{index + 1}</Text>
+                                                    <Text style={{ flex: 5 }}>{item.employee.full_name}</Text>
+                                                    <Text style={{ flex: 3 }}>{item.description}</Text>
+                                                </View>
+                                            )}
+                                            keyExtractor={item => item.id}
+                                            scrollEnabled={false}
+                                        />
                                     }
                                 </View>
-                                {/* <View>
-                                    <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#3498db',
-                                            alignSelf: 'center',
-                                            paddingVertical: 7,
-                                            paddingHorizontal: 20,
-                                            borderRadius: 7,
-                                            marginTop: 15
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                color: 'white'
-                                            }}
-                                        >Tampilkan Lebih Banyak</Text>
-                                    </TouchableOpacity>
-                                </View> */}
+                                {
+                                    employeesTodayNotPreset.next_page_url ?
+                                        <View>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    const splittedUrl = employeesTodayNotPreset.next_page_url.split('/api/mobile')
+
+                                                    loadEmployeesTodayNotPreset(splittedUrl[splittedUrl.length - 1])
+                                                }}
+                                                style={{
+                                                    backgroundColor: '#3498db',
+                                                    alignSelf: 'center',
+                                                    paddingVertical: 7,
+                                                    paddingHorizontal: 20,
+                                                    borderRadius: 7,
+                                                    marginTop: 15
+                                                }}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: 'white'
+                                                    }}
+                                                >Tampilkan Lebih Banyak</Text>
+                                            </TouchableOpacity>
+                                        </View> : <></>
+                                }
                             </>
                     }
 
@@ -2312,7 +2342,7 @@ export default function HomeScreen({ navigation }) {
                                                 >
                                                     <Text style={{ flex: 3 }}>{item.date}</Text>
                                                     <View style={{ flex: 5 }}>
-                                                        <Text style={{ flex: 6, backgroundColor: `${item.is_present == 'Yes' ? '#22c55e' : '#ef4444'}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                        <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.is_present == 'Yes' ? '#22c55e' : '#ef4444'}` }]}>{
                                                             item.is_present == 'Yes' ? 'Berangkat' : 'Tidak Berangkat'
                                                         }</Text>
                                                     </View>
@@ -2388,7 +2418,7 @@ export default function HomeScreen({ navigation }) {
                                                     <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                     <Text style={{ flex: 3 }}>{item.description}</Text>
                                                     <View style={{ flex: 5 }}>
-                                                        <Text style={{ flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                        <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}` }]}>{
                                                             item.status
                                                         }</Text>
                                                     </View>
@@ -2485,7 +2515,7 @@ export default function HomeScreen({ navigation }) {
                                                 >
                                                     <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                     <View style={{ flex: 5 }}>
-                                                        <Text style={{ flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
+                                                        <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}` }]}>{
                                                             item.status
                                                         }</Text>
                                                     </View>
@@ -2572,63 +2602,74 @@ export default function HomeScreen({ navigation }) {
                                         <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
                                     </View>
                                     {
-                                        arrHistoryPengajuanRevisiAbsen.map((historyPengajuanRevisiAbsen, index) => (
-                                            <View
-                                                key={index}
-                                                style={styles.listTableTbody}
-                                            >
-                                                <Text style={{ flex: 4 }}>{moment(historyPengajuanRevisiAbsen.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
-                                                <View style={{ flex: 5 }}>
-                                                    <Text style={{ flex: 6, backgroundColor: `${historyPengajuanRevisiAbsen.status == 'Waiting' ? '#1e293b' : `${historyPengajuanRevisiAbsen.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, fontSize: 12, borderRadius: 3 }}>{
-                                                        historyPengajuanRevisiAbsen.status
-                                                    }</Text>
-                                                </View>
-                                                <Text style={{ flex: 3 }}>
-                                                    <View>
-                                                        <TouchableOpacity
-                                                            onPress={() => {
-                                                                setObjDetailHistoryPengajuanRevisiAbsen(historyPengajuanRevisiAbsen)
-                                                                setShowModalDetailHistoryPengajuanRevisiAbsen(true)
-                                                            }}
-                                                            style={styles.buttonTableDataDetail}
-                                                        >
-                                                            <View
-                                                                style={styles.buttonTableDataDetailInner}
-                                                            >
-                                                                <MaterialCommunityIcons
-                                                                    name="information-outline"
-                                                                    style={{ color: 'white' }}
-                                                                    size={20}
-                                                                />
-                                                                <Text
-                                                                    style={styles.buttonTableDataDetailText}
-                                                                >Detail</Text>
+                                        <FlatList
+                                            data={arrHistoryPengajuanRevisiAbsen.data}
+                                            renderItem={({ item, index, separators }) => (
+                                                <View
+                                                    key={index}
+                                                    style={styles.listTableTbody}
+                                                >
+                                                    <View
+                                                        key={index}
+                                                        style={styles.listTableTbody}
+                                                    >
+                                                        <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
+                                                        <View style={{ flex: 5 }}>
+                                                            <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}` }]}>{
+                                                                item.status
+                                                            }</Text>
+                                                        </View>
+                                                        <Text style={{ flex: 3 }}>
+                                                            <View>
+                                                                <TouchableOpacity
+                                                                    onPress={() => {
+                                                                        setObjDetailHistoryPengajuanRevisiAbsen(item)
+                                                                        setShowModalDetailHistoryPengajuanRevisiAbsen(true)
+                                                                    }}
+                                                                    style={styles.buttonTableDataDetail}
+                                                                >
+                                                                    <View
+                                                                        style={styles.buttonTableDataDetailInner}
+                                                                    >
+                                                                        <MaterialCommunityIcons
+                                                                            name="information-outline"
+                                                                            style={{ color: 'white' }}
+                                                                            size={20}
+                                                                        />
+                                                                        <Text
+                                                                            style={styles.buttonTableDataDetailText}
+                                                                        >Detail</Text>
+                                                                    </View>
+                                                                </TouchableOpacity>
                                                             </View>
-                                                        </TouchableOpacity>
+                                                        </Text>
                                                     </View>
-                                                </Text>
-                                            </View>
-                                        ))
+                                                </View>
+                                            )}
+                                            keyExtractor={item => item.id}
+                                            scrollEnabled={false}
+                                        />
                                     }
                                 </View>
-                                {/* <View>
-                                    <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#3498db',
-                                            alignSelf: 'center',
-                                            paddingVertical: 7,
-                                            paddingHorizontal: 20,
-                                            borderRadius: 7,
-                                            marginTop: 15
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                color: 'white'
-                                            }}
-                                        >Tampilkan Lebih Banyak</Text>
-                                    </TouchableOpacity>
-                                </View> */}
+                                {
+                                    arrHistoryPengajuanRevisiAbsen.next_page_url ?
+                                        <View>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    const splittedUrl = arrHistoryPengajuanRevisiAbsen.next_page_url.split('/api/mobile')
+
+                                                    loadArrHistoryPengajuanRevisiAbsen(splittedUrl[splittedUrl.length - 1])
+                                                }}
+                                                style={styles.buttonListTableViewMore}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: 'white'
+                                                    }}
+                                                >Tampilkan Lebih Banyak</Text>
+                                            </TouchableOpacity>
+                                        </View> : <></>
+                                }
                             </>
                     }
 
@@ -2918,5 +2959,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         borderRadius: 7,
         marginTop: 15
+    },
+    tableDataLabelStatus: {
+        alignSelf: 'flex-start',
+        color: 'white',
+        fontWeight: '500',
+        paddingVertical: 2,
+        paddingHorizontal: 5,
+        fontSize: 12,
+        borderRadius: 3
     }
 });
