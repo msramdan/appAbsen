@@ -463,7 +463,7 @@ export default function HomeScreen({ navigation }) {
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get('/news?size=5', {
+        Axios.get('/news?size=3', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
