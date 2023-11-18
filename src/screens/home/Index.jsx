@@ -200,7 +200,9 @@ export default function HomeScreen({ navigation }) {
     }, [])
 
     useEffect(() => {
-        if (!stateTodayPresence && !stateTodayIzinOrSakit) {
+        if (new Date().getDay() == 6 || new Date().getDay() == 0) {
+            setButtonClockInEnabled(false)
+        } else if (!stateTodayPresence && !stateTodayIzinOrSakit) {
             setButtonClockInEnabled(true)
         } else {
             if (stateTodayIzinOrSakit) {
@@ -234,7 +236,9 @@ export default function HomeScreen({ navigation }) {
     }, [stateTodayPresence, stateTodayIzinOrSakit])
 
     useEffect(() => {
-        if (stateTodayPresence) {
+        if (new Date().getDay() == 6 || new Date().getDay() == 0) {
+            setButtonClockInEnabled(false)
+        } else if (stateTodayPresence) {
             setButtonClockOutEnabled(stateTodayPresence.is_present == 'Yes' && !stateTodayPresence.clock_out)
         }
     }, [stateTodayPresence])
