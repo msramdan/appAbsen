@@ -27,9 +27,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 //import dimensions
 import { windowWidth } from '../../utils/Dimensions';
 
-//import api services
-import Api from '../../services/Api';
-
 //import component Loading
 import Loading from '../../components/Loading';
 
@@ -60,11 +57,11 @@ export default function HomeScreen({ navigation }) {
      */
     const [stateTodayPresence, setStateTodayPresence] = useState(false)
     const [stateTodayIzinOrSakit, setStateTodayIzinOrSakit] = useState(false)
-    const [currentAuthEmployee, setCurrentAuthEmployee] = useState(null)
+    const [currentAuthEmployee, setCurrentAuthEmployee] = useState({})
     const [banners, setBanners] = useState([])
     const [news, setNews] = useState([])
     const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState([])
-    const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState([])
+    const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState({})
     const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState([])
     const [arrHistoryPengajuanIzinSakit, setArrHistoryPengajuanIzinSakit] = useState([])
     const [arrHistoryPengajuanRevisiAbsen, setArrHistoryPengajuanRevisiAbsen] = useState([])
@@ -180,13 +177,7 @@ export default function HomeScreen({ navigation }) {
     const [selectedEnumIzinSakit, setSelectedEnumIzinSakit] = useState('Izin')
     const [detailedDescription, setDetailedDescription] = useState('')
 
-    //init state sliders
-    const [loadingSliders, setLoadingSliders] = useState(true);
-    const [sliders, setSliders] = useState([]);
-
     //init state posts
-    const [loadingPosts, setLoadingPosts] = useState(true);
-    const [posts, setPosts] = useState([]);
     const isFocused = useIsFocused()
     const toast = useToast()
     const [dialogAskLocation, setDialogAskLocation] = useState(false)
@@ -231,23 +222,31 @@ export default function HomeScreen({ navigation }) {
         }
     }, [stateTodayPresence])
 
-    const loadArrHistoryPresenceMonthly = async () => {
+    const loadArrHistoryPresenceMonthly = async (apiSourceUrl = null) => {
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get('/attendances/history-presence-monthly', {
+        setLoadingHistoryPresenceMonthly(true)
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/history-presence-monthly', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
             if (res) {
-                setArrHistoryPresenceMonthly(res.data.data)
+                if (arrHistoryPresenceMonthly.data && apiSourceUrl) {
+                    const dataHistoryPresenceMonthlyAppended = [...arrHistoryPresenceMonthly.data]
 
-                setLoadingHistoryPresenceMonthly(false)
+                    dataHistoryPresenceMonthlyAppended.push.apply(dataHistoryPresenceMonthlyAppended, res.data.data.data)
+                    res.data.data.data = dataHistoryPresenceMonthlyAppended
+                }
+
+                setArrHistoryPresenceMonthly(res.data.data)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
                 Redirect.toLoginScreen(navigation)
             }
+        }).finally(() => {
+            setLoadingHistoryPresenceMonthly(false)
         })
     }
 
@@ -425,42 +424,6 @@ export default function HomeScreen({ navigation }) {
                 }
             })
     }
-
-    //method fetchDataSliders
-    const fetchDataSliders = async () => {
-        //set loading true
-        setLoadingSliders(true);
-        await Api.get('/api/public/sliders').then(response => {
-            //assign data to state
-            setSliders(response.data.data);
-
-            //set loading false
-            setLoadingSliders(false);
-        });
-    };
-
-    //method fetchDataPosts
-    const fetchDataPosts = async () => {
-        //set loading true
-        setLoadingPosts(true);
-
-        await Api.get('/api/public/posts_home').then(response => {
-            //assign data to state
-            setPosts(response.data.data);
-
-            //set loading false
-            setLoadingPosts(false);
-        });
-    };
-
-    //hook useEffect
-    useEffect(() => {
-        //call method "fetchDataSliders"
-        fetchDataSliders();
-
-        //call method "fetchDataPosts"
-        fetchDataPosts();
-    }, []);
 
     /**
      * Prevent Back Button
@@ -895,10 +858,10 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Clock In */}
             <Modal isVisible={showModalClockIn}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             {
                                 loadingDoClockIn ?
@@ -906,12 +869,7 @@ export default function HomeScreen({ navigation }) {
                             }
 
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Clock In</Text>
 
                             {
@@ -920,16 +878,7 @@ export default function HomeScreen({ navigation }) {
                                         style={{ alignItems: 'center' }}
                                     >
                                         <Text
-                                            style={{
-                                                width: Dimensions.get('window').width - 100,
-                                                backgroundColor: '#ef4444',
-                                                color: '#FFF',
-                                                paddingVertical: 6,
-                                                paddingHorizontal: 10,
-                                                borderRadius: 4,
-                                                marginBottom: 10,
-                                                marginTop: -7
-                                            }}
+                                            style={styles.modalErrorMessage}
                                         >
                                             {errorMessageDoClockIn}
                                         </Text>
@@ -938,38 +887,24 @@ export default function HomeScreen({ navigation }) {
 
 
                             <View
-                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                                style={styles.flexCenteringElement}
                             >
                                 <Image
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        height: Dimensions.get('window').width - 100,
-                                        borderRadius: 4
-                                    }}
+                                    style={styles.modalPhotoPreview}
                                     source={photoClockIn ? { uri: photoClockIn.uri } : require('./../../assets/images/no-photo.png')}
                                 />
                             </View>
                             <View
-                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                                style={styles.flexCenteringElement}
                             >
                                 <TouchableOpacity
                                     onPress={() => {
                                         doTakeAPhotoClockIn()
                                     }}
-                                    style={{
-                                        borderRadius: 8,
-                                        paddingVertical: 15,
-                                        marginTop: 12,
-                                        width: Dimensions.get('window').width - 100,
-                                        backgroundColor: '#3498db',
-                                    }}
+                                    style={styles.modalButtonTakeAPhoto}
                                 >
                                     <View
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
+                                        style={styles.flexCenteringElement}
                                     >
                                         <MaterialCommunityIcons
                                             name="camera"
@@ -977,12 +912,7 @@ export default function HomeScreen({ navigation }) {
                                             size={22}
                                         />
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >
                                             Ambil Foto
                                         </Text>
@@ -995,60 +925,29 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 ></View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalClockIn(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
                                             doClockIn()
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#22c55e'
-                                        }}
+                                        style={styles.buttonSuccessModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Clock In</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1061,10 +960,10 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Clock Out */}
             <Modal isVisible={showModalClockOut}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             {
                                 loadingDoClockOut ?
@@ -1072,12 +971,7 @@ export default function HomeScreen({ navigation }) {
                             }
 
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Clock Out</Text>
 
                             {
@@ -1086,16 +980,7 @@ export default function HomeScreen({ navigation }) {
                                         style={{ alignItems: 'center' }}
                                     >
                                         <Text
-                                            style={{
-                                                width: Dimensions.get('window').width - 100,
-                                                backgroundColor: '#ef4444',
-                                                color: '#FFF',
-                                                paddingVertical: 6,
-                                                paddingHorizontal: 10,
-                                                borderRadius: 4,
-                                                marginBottom: 10,
-                                                marginTop: -7
-                                            }}
+                                            style={styles.modalErrorMessage}
                                         >
                                             {errorMessageDoClockOut}
                                         </Text>
@@ -1103,38 +988,24 @@ export default function HomeScreen({ navigation }) {
                             }
 
                             <View
-                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                                style={styles.flexCenteringElement}
                             >
                                 <Image
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        height: Dimensions.get('window').width - 100,
-                                        borderRadius: 4
-                                    }}
+                                    style={styles.modalPhotoPreview}
                                     source={photoClockOut ? { uri: photoClockOut.uri } : require('./../../assets/images/no-photo.png')}
                                 />
                             </View>
                             <View
-                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                                style={styles.flexCenteringElement}
                             >
                                 <TouchableOpacity
                                     onPress={() => {
                                         doTakeAPhotoClockOut()
                                     }}
-                                    style={{
-                                        borderRadius: 8,
-                                        paddingVertical: 15,
-                                        marginTop: 12,
-                                        width: Dimensions.get('window').width - 100,
-                                        backgroundColor: '#3498db',
-                                    }}
+                                    style={styles.modalButtonTakeAPhoto}
                                 >
                                     <View
-                                        style={{
-                                            flexDirection: 'row',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
+                                        style={styles.flexCenteringElement}
                                     >
                                         <MaterialCommunityIcons
                                             name="camera"
@@ -1142,12 +1013,7 @@ export default function HomeScreen({ navigation }) {
                                             size={22}
                                         />
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >
                                             Ambil Foto
                                         </Text>
@@ -1160,61 +1026,30 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 >
                                 </View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalClockOut(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
                                             doClockOut()
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#22c55e'
-                                        }}
+                                        style={styles.buttonSuccessModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Clock Out</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1227,10 +1062,10 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Izin atau Sakit */}
             <Modal isVisible={showModalIzinAtauSakit}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             {
                                 loadingDoIzinAtauSakit ?
@@ -1238,12 +1073,7 @@ export default function HomeScreen({ navigation }) {
                             }
 
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Izin atau Sakit</Text>
 
                             {
@@ -1252,16 +1082,7 @@ export default function HomeScreen({ navigation }) {
                                         style={{ alignItems: 'center' }}
                                     >
                                         <Text
-                                            style={{
-                                                width: Dimensions.get('window').width - 100,
-                                                backgroundColor: '#ef4444',
-                                                color: '#FFF',
-                                                paddingVertical: 6,
-                                                paddingHorizontal: 10,
-                                                borderRadius: 4,
-                                                marginBottom: 10,
-                                                marginTop: -7
-                                            }}
+                                            style={styles.modalErrorMessage}
                                         >
                                             {errorMessageDoIzinAtauSakit}
                                         </Text>
@@ -1269,7 +1090,7 @@ export default function HomeScreen({ navigation }) {
                             }
 
                             <View
-                                style={{ flexDirection: 'row', justifyContent: 'center' }}
+                                style={styles.flexCenteringElement}
                             >
 
                             </View>
@@ -1312,7 +1133,7 @@ export default function HomeScreen({ navigation }) {
                                         marginBottom: 5
                                     }}>Detailed Description</Text>
                                     <TextInput
-                                        style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top' }]}
+                                        style={[styles.input, styles.enabledModalTextarea]}
                                         placeholder="Detailed Description"
                                         multiline={true}
                                         numberOfLines={3}
@@ -1332,25 +1153,14 @@ export default function HomeScreen({ navigation }) {
 
                                     {
                                         fileAttachmentIzinOrSakit ?
-                                            <Text style={{
-                                                marginTop: -2,
-                                                marginBottom: 8,
-                                                color: '#000'
-                                            }}>{fileAttachmentIzinOrSakit.name}</Text> : <></>
+                                            <Text style={styles.fileAttachmentTextModal}>{fileAttachmentIzinOrSakit.name}</Text> : <></>
                                     }
 
                                     <TouchableOpacity
                                         onPress={() => {
                                             doOpenDocumentPicker()
                                         }}
-                                        style={{
-                                            borderWidth: 1,
-                                            borderColor: 'gray',
-                                            width: 100,
-                                            paddingVertical: 6,
-                                            paddingHorizontal: 10,
-                                            borderRadius: 4
-                                        }}
+                                        style={styles.buttonChooseFile}
                                     >
                                         <Text
                                             style={{
@@ -1365,61 +1175,30 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 >
                                 </View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalIzinAtauSakit(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
                                             doIzinOrSakit()
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#22c55e'
-                                        }}
+                                        style={styles.buttonSuccessModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Kirim Pengajuan</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1432,10 +1211,10 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Pengajuan Cuti */}
             <Modal isVisible={showModalPengajuanCuti}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             {
                                 loadingDoPengajuanCuti ?
@@ -1443,12 +1222,7 @@ export default function HomeScreen({ navigation }) {
                             }
 
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Pengajuan Cuti</Text>
 
                             {
@@ -1457,16 +1231,7 @@ export default function HomeScreen({ navigation }) {
                                         style={{ alignItems: 'center' }}
                                     >
                                         <Text
-                                            style={{
-                                                width: Dimensions.get('window').width - 100,
-                                                backgroundColor: '#ef4444',
-                                                color: '#FFF',
-                                                paddingVertical: 6,
-                                                paddingHorizontal: 10,
-                                                borderRadius: 4,
-                                                marginBottom: 10,
-                                                marginTop: -7
-                                            }}
+                                            style={styles.modalErrorMessage}
                                         >
                                             {errorMessageDoPengajuanCuti}
                                         </Text>
@@ -1547,7 +1312,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Alasan</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top' }]}
+                                            style={[styles.input, styles.enabledModalTextarea]}
                                             placeholder="Alasan"
                                             multiline={true}
                                             numberOfLines={3}
@@ -1564,25 +1329,14 @@ export default function HomeScreen({ navigation }) {
 
                                         {
                                             fileAttachmentPengajuanCuti ?
-                                                <Text style={{
-                                                    marginTop: -2,
-                                                    marginBottom: 8,
-                                                    color: '#000'
-                                                }}>{fileAttachmentPengajuanCuti.name}</Text> : <></>
+                                                <Text style={styles.fileAttachmentTextModal}>{fileAttachmentPengajuanCuti.name}</Text> : <></>
                                         }
 
                                         <TouchableOpacity
                                             onPress={() => {
                                                 doOpenDocumentPickerPengajuanCuti()
                                             }}
-                                            style={{
-                                                borderWidth: 1,
-                                                borderColor: 'gray',
-                                                width: 100,
-                                                paddingVertical: 6,
-                                                paddingHorizontal: 10,
-                                                borderRadius: 4
-                                            }}
+                                            style={styles.buttonChooseFile}
                                         >
                                             <Text
                                                 style={{
@@ -1598,60 +1352,29 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 ></View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalPengajuanCuti(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
                                             doPengajuanCuti()
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#22c55e'
-                                        }}
+                                        style={styles.buttonSuccessModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Pengajuan Cuti</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1664,18 +1387,13 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Pengajuan Revisi Absen */}
             <Modal isVisible={showModalPengajuanRevisiAbsen}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Pengajuan Revisi Absen</Text>
 
                             {
@@ -1684,16 +1402,7 @@ export default function HomeScreen({ navigation }) {
                                         style={{ alignItems: 'center' }}
                                     >
                                         <Text
-                                            style={{
-                                                width: Dimensions.get('window').width - 100,
-                                                backgroundColor: '#ef4444',
-                                                color: '#FFF',
-                                                paddingVertical: 6,
-                                                paddingHorizontal: 10,
-                                                borderRadius: 4,
-                                                marginBottom: 10,
-                                                marginTop: -7
-                                            }}
+                                            style={styles.modalErrorMessage}
                                         >
                                             {errorMessageDoPengajuanRevisiAbsen}
                                         </Text>
@@ -1806,7 +1515,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Alasan</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top' }]}
+                                            style={[styles.input, styles.enabledModalTextarea]}
                                             placeholder="Alasan"
                                             multiline={true}
                                             numberOfLines={3}
@@ -1823,60 +1532,29 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 ></View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalPengajuanRevisiAbsen(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
                                             doPengajuanRevisiAbsen()
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#22c55e'
-                                        }}
+                                        style={styles.buttonSuccessModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Pengajuan Revisi Absen</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -1889,18 +1567,13 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Detail History Pengajuan Izin / Sakit */}
             <Modal isVisible={showModalDetailHistoryPengajuanIzinSakit}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Detail History Pengajuan Izin / Sakit</Text>
 
                             <View
@@ -1917,7 +1590,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Tanggal</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextInput]}
                                             placeholder="Tanggal"
                                             editable={false}
                                             value={objDetailHistoryPengajuanIzinSakit.date}
@@ -1928,7 +1601,7 @@ export default function HomeScreen({ navigation }) {
                                         marginBottom: 5
                                     }}>Description</Text>
                                     <TextInput
-                                        style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                        style={[styles.input, styles.disabledTextInput]}
                                         placeholder="Tanggal Awal"
                                         editable={false}
                                         value={objDetailHistoryPengajuanIzinSakit.description}
@@ -1944,7 +1617,7 @@ export default function HomeScreen({ navigation }) {
                                         marginBottom: 5
                                     }}>Detailed Description</Text>
                                     <TextInput
-                                        style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                        style={[styles.input, styles.disabledTextArea]}
                                         placeholder="Detailed Description"
                                         multiline={true}
                                         numberOfLines={3}
@@ -1969,20 +1642,10 @@ export default function HomeScreen({ navigation }) {
                                                     onPress={() => {
                                                         Linking.openURL(objDetailHistoryPengajuanIzinSakit.file_attachment)
                                                     }}
-                                                    style={{
-                                                        backgroundColor: '#0ea5e9',
-                                                        width: 100,
-                                                        paddingVertical: 6,
-                                                        paddingHorizontal: 10,
-                                                        borderRadius: 4
-                                                    }}
+                                                    style={styles.buttonPreviewFileModal}
                                                 >
                                                     <Text
-                                                        style={{
-                                                            textAlign: 'center',
-                                                            fontWeight: '500',
-                                                            color: '#FFF'
-                                                        }}
+                                                        style={styles.buttonTextPreviewFileModal}
                                                     >Lihat File</Text>
                                                 </TouchableOpacity>
                                             </View> : <Text style={{ color: '#333', fontWeight: '500' }}>Tidak ada file dokumen</Text>
@@ -2003,7 +1666,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Note Review</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextArea]}
                                             placeholder="Note Review"
                                             editable={false}
                                             multiline={true}
@@ -2018,40 +1681,19 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 ></View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalDetailHistoryPengajuanIzinSakit(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -2064,10 +1706,10 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Detail History Pengajuan Cuti */}
             <Modal isVisible={showModalDetailHistoryPengajuanCuti}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             {
                                 loadingDoPengajuanRevisiAbsen ?
@@ -2075,12 +1717,7 @@ export default function HomeScreen({ navigation }) {
                             }
 
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Detail History Pengajuan Cuti</Text>
 
                             <View
@@ -2096,7 +1733,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Tanggal Awal</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextInput]}
                                             placeholder="Tanggal Awal"
                                             editable={false}
                                             value={objDetailHistoryPengajuanCuti.start_date}
@@ -2107,7 +1744,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Tanggal Akhir</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextInput]}
                                             placeholder="Tanggal Akhir"
                                             editable={false}
                                             value={objDetailHistoryPengajuanCuti.end_date}
@@ -2118,7 +1755,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Alasan</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextArea]}
                                             placeholder="Alasan"
                                             editable={false}
                                             multiline={true}
@@ -2167,7 +1804,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Note Review</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextArea]}
                                             placeholder="Note Review"
                                             editable={false}
                                             multiline={true}
@@ -2182,40 +1819,19 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 ></View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalDetailHistoryPengajuanCuti(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -2228,18 +1844,13 @@ export default function HomeScreen({ navigation }) {
 
             {/* Modal Detail History Pengajuan Revisi Absen */}
             <Modal isVisible={showModalDetailHistoryPengajuanRevisiAbsen}>
-                <View style={{ flex: 1, justifyContent: 'center' }}>
+                <View style={styles.modalOuter}>
                     <View>
                         <View
-                            style={{ backgroundColor: 'white', height: 'auto', borderRadius: 7, paddingVertical: 25, position: 'relative' }}
+                            style={styles.modalCard}
                         >
                             <Text
-                                style={{
-                                    textAlign: 'center',
-                                    fontSize: 20,
-                                    fontWeight: '500',
-                                    marginBottom: 20
-                                }}
+                                style={styles.modalTitle}
                             >Detail History Pengajuan Revisi Absen</Text>
 
                             <View
@@ -2256,7 +1867,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Tanggal</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextInput]}
                                             placeholder="Tanggal"
                                             editable={false}
                                             value={objDetailHistoryPengajuanRevisiAbsen.date}
@@ -2268,7 +1879,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Clock In</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextInput]}
                                             placeholder="Clock In"
                                             editable={false}
                                             value={objDetailHistoryPengajuanRevisiAbsen.clock_in}
@@ -2280,7 +1891,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Clock Out</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextInput]}
                                             placeholder="Clock Out"
                                             editable={false}
                                             value={objDetailHistoryPengajuanRevisiAbsen.clock_out}
@@ -2297,7 +1908,7 @@ export default function HomeScreen({ navigation }) {
                                         marginBottom: 5
                                     }}>Reason</Text>
                                     <TextInput
-                                        style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                        style={[styles.input, styles.disabledTextArea]}
                                         placeholder="Reason"
                                         multiline={true}
                                         numberOfLines={3}
@@ -2327,7 +1938,7 @@ export default function HomeScreen({ navigation }) {
                                             marginBottom: 5
                                         }}>Note Review</Text>
                                         <TextInput
-                                            style={[styles.input, { color: '#333', height: 'unset', textAlignVertical: 'top', backgroundColor: '#d1d5db' }]}
+                                            style={[styles.input, styles.disabledTextArea]}
                                             placeholder="Note Review"
                                             editable={false}
                                             multiline={true}
@@ -2342,40 +1953,19 @@ export default function HomeScreen({ navigation }) {
                                 style={{ alignItems: 'center' }}
                             >
                                 <View
-                                    style={{
-                                        marginVertical: 20,
-                                        backgroundColor: '#cbd5e1',
-                                        height: 2,
-                                        width: Dimensions.get('window').width - 100
-                                    }}
+                                    style={styles.modalHorizontalLine}
                                 ></View>
                                 <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        flexDirection: 'row',
-                                        gap: 10
-                                    }}
+                                    style={styles.modalButtonActionWrapper}
                                 >
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowModalDetailHistoryPengajuanRevisiAbsen(false)
                                         }}
-                                        style={{
-                                            paddingVertical: 15,
-                                            borderRadius: 5,
-                                            flex: 1,
-                                            backgroundColor: '#64748b'
-                                        }}
+                                        style={styles.buttonCloseModal}
                                     >
                                         <Text
-                                            style={{
-                                                fontSize: 16,
-                                                fontWeight: '500',
-                                                textAlign: 'center',
-                                                color: '#FFF'
-                                            }}
+                                            style={styles.buttonTextModal}
                                         >Tutup</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -2449,7 +2039,7 @@ export default function HomeScreen({ navigation }) {
                     <View style={styles.headerTextContainer}>
                         <Text style={styles.headerTextColor}>Selamat Datang</Text>
                         <Text style={styles.headerTextTwoColor}>
-                            Muhammad Saeful Ramdan
+                            {currentAuthEmployee.full_name}
                         </Text>
                     </View>
                     <View style={styles.headerImageContainer}>
@@ -2489,29 +2079,15 @@ export default function HomeScreen({ navigation }) {
                                     setShowModalClockIn(true)
                                 }
                             }}
-                            style={{
+                            style={[styles.buttonMainMenuAction, {
                                 opacity: buttonClockInEnabled ? 1 : 0.55,
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 1,
-                                },
-                                shadowOpacity: 0.18,
-                                shadowRadius: 1.0,
-                                flex: 1,
-                                backgroundColor: '#3498db',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 12,
-                                borderRadius: 5
-                            }}>
+                            }]}>
                             <MaterialCommunityIcons
                                 name="location-enter"
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={40}
                             />
-                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Clock In</Text>
+                            <Text style={styles.buttonMainMenuText}>Clock In</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             disabled={!buttonIzinOrSakitEnabled}
@@ -2520,30 +2096,16 @@ export default function HomeScreen({ navigation }) {
                                     setShowModalIzinAtauSakit(true)
                                 }
                             }}
-                            style={{
+                            style={[styles.buttonMainMenuAction, {
                                 opacity: buttonIzinOrSakitEnabled ? 1 : 0.55,
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 1,
-                                },
-                                shadowOpacity: 0.18,
-                                shadowRadius: 1.0,
-                                flex: 1,
-                                backgroundColor: '#3498db',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 12,
-                                borderRadius: 5
-                            }}
+                            }]}
                         >
                             <MaterialCommunityIcons
                                 name="file-document"
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={40}
                             />
-                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Izin atau Sakit</Text>
+                            <Text style={styles.buttonMainMenuText}>Izin atau Sakit</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             disabled={!buttonClockOutEnabled}
@@ -2552,30 +2114,16 @@ export default function HomeScreen({ navigation }) {
                                     setShowModalClockOut(true)
                                 }
                             }}
-                            style={{
+                            style={[styles.buttonMainMenuAction, {
                                 opacity: buttonClockOutEnabled ? 1 : 0.55,
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 1,
-                                },
-                                shadowOpacity: 0.18,
-                                shadowRadius: 1.0,
-                                flex: 1,
-                                backgroundColor: '#3498db',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 12,
-                                borderRadius: 5
-                            }}
+                            }]}
                         >
                             <MaterialCommunityIcons
                                 name="location-exit"
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={40}
                             />
-                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Clock Out</Text>
+                            <Text style={styles.buttonMainMenuText}>Clock Out</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={{ gap: 15, marginTop: 15, flexDirection: 'row' }}>
@@ -2586,29 +2134,15 @@ export default function HomeScreen({ navigation }) {
                                     setShowModalPengajuanCuti(true)
                                 }
                             }}
-                            style={{
+                            style={[styles.buttonMainMenuAction, {
                                 opacity: buttonPengajuanCutiEnabled ? 1 : 0.55,
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 1,
-                                },
-                                shadowOpacity: 0.18,
-                                shadowRadius: 1.0,
-                                flex: 1,
-                                backgroundColor: '#3498db',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 12,
-                                borderRadius: 5
-                            }}>
+                            }]}>
                             <MaterialCommunityIcons
                                 name="calendar"
                                 style={[styles.postIcon, { color: 'white', transform: [{ translateY: -7 }] }]}
                                 size={40}
                             />
-                            <Text style={{ marginTop: 5, color: 'white', fontWeight: '500' }}>Pengajuan Cuti</Text>
+                            <Text style={styles.buttonMainMenuText}>Pengajuan Cuti</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             disabled={!buttonPengajuanRevisiAbsenEnabled}
@@ -2617,29 +2151,15 @@ export default function HomeScreen({ navigation }) {
                                     setShowModalPengajuanRevisiAbsen(true)
                                 }
                             }}
-                            style={{
+                            style={[styles.buttonMainMenuAction, {
                                 opacity: buttonPengajuanRevisiAbsenEnabled ? 1 : 0.55,
-                                shadowColor: '#000',
-                                shadowOffset: {
-                                    width: 0,
-                                    height: 1,
-                                },
-                                shadowOpacity: 0.18,
-                                shadowRadius: 1.0,
-                                flex: 1,
-                                backgroundColor: '#3498db',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                paddingVertical: 12,
-                                borderRadius: 5
-                            }}>
+                            }]}>
                             <MaterialCommunityIcons
                                 name="calendar-edit"
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={40}
                             />
-                            <Text style={{ marginTop: 5, color: 'white', textAlign: 'center', fontWeight: '500' }}>Pengajuan Revisi Absen</Text>
+                            <Text style={styles.buttonMainMenuText}>Pengajuan Revisi Absen</Text>
                         </TouchableOpacity>
                         <View style={{ flex: 1 }}></View>
                     </View>
@@ -2690,32 +2210,20 @@ export default function HomeScreen({ navigation }) {
                             <>
 
                                 <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        padding: 10,
-                                        borderRadius: 10,
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 0,
-                                            height: 1,
-                                        },
-                                        shadowOpacity: 0.18,
-                                        shadowRadius: 1.0,
-                                        elevation: 1
-                                    }}
+                                    style={styles.cardListTable}
                                 >
                                     <View
-                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                        style={styles.listTableThead}
                                     >
-                                        <Text style={{ flex: 1, fontWeight: '600', color: '#444' }}>No</Text>
-                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Nama</Text>
-                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Deskripsi</Text>
+                                        <Text style={[{ flex: 1 }, styles.listTableTheadTD]}>No</Text>
+                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Nama</Text>
+                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Deskripsi</Text>
                                     </View>
                                     {
                                         employeesTodayNotPreset.map((employeeTodayNotPreset, index) => (
                                             <View
                                                 key={index}
-                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                                style={styles.listTableTbody}
                                             >
                                                 <Text style={{ flex: 1 }}>{index + 1}</Text>
                                                 <Text style={{ flex: 5 }}>{employeeTodayNotPreset.employee.full_name}</Text>
@@ -2765,32 +2273,20 @@ export default function HomeScreen({ navigation }) {
                             <>
 
                                 <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        padding: 10,
-                                        borderRadius: 10,
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 0,
-                                            height: 1,
-                                        },
-                                        shadowOpacity: 0.18,
-                                        shadowRadius: 1.0,
-                                        elevation: 1
-                                    }}
+                                    style={styles.cardListTable}
                                 >
                                     <View
-                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                        style={styles.listTableThead}
                                     >
-                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Tanggal</Text>
-                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
-                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Deskripsi</Text>
+                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Tanggal</Text>
+                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
+                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Deskripsi</Text>
                                     </View>
                                     {
-                                        arrHistoryPresenceMonthly.map((historyPresenceMonthly, index) => (
+                                        arrHistoryPresenceMonthly.data.map((historyPresenceMonthly, index) => (
                                             <View
                                                 key={index}
-                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                                style={styles.listTableTbody}
                                             >
                                                 <Text style={{ flex: 3 }}>{historyPresenceMonthly.date}</Text>
                                                 <View style={{ flex: 5 }}>
@@ -2803,24 +2299,26 @@ export default function HomeScreen({ navigation }) {
                                         ))
                                     }
                                 </View>
-                                {/* <View>
-                                    <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#3498db',
-                                            alignSelf: 'center',
-                                            paddingVertical: 7,
-                                            paddingHorizontal: 20,
-                                            borderRadius: 7,
-                                            marginTop: 15
-                                        }}
-                                    >
-                                        <Text
-                                            style={{
-                                                color: 'white'
-                                            }}
-                                        >Tampilkan Lebih Banyak</Text>
-                                    </TouchableOpacity>
-                                </View> */}
+                                {
+                                    arrHistoryPresenceMonthly.next_page_url ?
+                                        <View>
+                                            <TouchableOpacity
+                                                onPress={() => {
+                                                    const splittedUrl = arrHistoryPresenceMonthly.next_page_url.split('/api/mobile')
+
+                                                    loadArrHistoryPresenceMonthly(splittedUrl[splittedUrl.length - 1])
+                                                }}
+                                                style={styles.buttonListTableViewMore}
+                                            >
+                                                <Text
+                                                    style={{
+                                                        color: 'white'
+                                                    }}
+                                                >Tampilkan Lebih Banyak</Text>
+                                            </TouchableOpacity>
+                                        </View> : <></>
+                                }
+
                             </>
                     }
 
@@ -2844,33 +2342,21 @@ export default function HomeScreen({ navigation }) {
                             <>
 
                                 <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        padding: 10,
-                                        borderRadius: 10,
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 0,
-                                            height: 1,
-                                        },
-                                        shadowOpacity: 0.18,
-                                        shadowRadius: 1.0,
-                                        elevation: 1
-                                    }}
+                                    style={styles.cardListTable}
                                 >
                                     <View
-                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                        style={styles.listTableThead}
                                     >
-                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Tanggal</Text>
-                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Desc</Text>
-                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
-                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Aksi</Text>
+                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Tanggal</Text>
+                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Desc</Text>
+                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
+                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Aksi</Text>
                                     </View>
                                     {
                                         arrHistoryPengajuanIzinSakit.map((historyPengajuanIzinSakit, index) => (
                                             <View
                                                 key={index}
-                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                                style={styles.listTableTbody}
                                             >
                                                 <Text style={{ flex: 4 }}>{moment(historyPengajuanIzinSakit.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                 <Text style={{ flex: 3 }}>{historyPengajuanIzinSakit.description}</Text>
@@ -2886,10 +2372,10 @@ export default function HomeScreen({ navigation }) {
                                                                 setObjDetailHistoryPengajuanIzinSakit(historyPengajuanIzinSakit)
                                                                 setShowModalDetailHistoryPengajuanIzinSakit(true)
                                                             }}
-                                                            style={{ backgroundColor: '#3b82f6', paddingVertical: 2, paddingHorizontal: 5, alignSelf: 'flex-start', borderRadius: 3 }}
+                                                            style={styles.buttonTableDataDetail}
                                                         >
                                                             <View
-                                                                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                                                style={styles.buttonTableDataDetailInner}
                                                             >
                                                                 <MaterialCommunityIcons
                                                                     name="information-outline"
@@ -2897,7 +2383,7 @@ export default function HomeScreen({ navigation }) {
                                                                     size={20}
                                                                 />
                                                                 <Text
-                                                                    style={{ color: 'white', fontWeight: '500', fontSize: 12, paddingRight: 3 }}
+                                                                    style={styles.buttonTableDataDetailText}
                                                                 >Detail</Text>
                                                             </View>
                                                         </TouchableOpacity>
@@ -2948,32 +2434,20 @@ export default function HomeScreen({ navigation }) {
                             <>
 
                                 <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        padding: 10,
-                                        borderRadius: 10,
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 0,
-                                            height: 1,
-                                        },
-                                        shadowOpacity: 0.18,
-                                        shadowRadius: 1.0,
-                                        elevation: 1
-                                    }}
+                                    style={styles.cardListTable}
                                 >
                                     <View
-                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                        style={styles.listTableThead}
                                     >
-                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Tanggal</Text>
-                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
-                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Aksi</Text>
+                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Tanggal</Text>
+                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
+                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
                                     </View>
                                     {
                                         arrHistoryPengajuanCuti.map((historyPengajuanCuti, index) => (
                                             <View
                                                 key={index}
-                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                                style={styles.listTableTbody}
                                             >
                                                 <Text style={{ flex: 4 }}>{moment(historyPengajuanCuti.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                 <View style={{ flex: 5 }}>
@@ -2988,10 +2462,10 @@ export default function HomeScreen({ navigation }) {
                                                                 setObjDetailHistoryPengajuanCuti(historyPengajuanCuti)
                                                                 setShowModalDetailHistoryPengajuanCuti(true)
                                                             }}
-                                                            style={{ backgroundColor: '#3b82f6', paddingVertical: 2, paddingHorizontal: 5, alignSelf: 'flex-start', borderRadius: 3 }}
+                                                            style={styles.buttonTableDataDetail}
                                                         >
                                                             <View
-                                                                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                                                style={styles.buttonTableDataDetailInner}
                                                             >
                                                                 <MaterialCommunityIcons
                                                                     name="information-outline"
@@ -2999,7 +2473,7 @@ export default function HomeScreen({ navigation }) {
                                                                     size={20}
                                                                 />
                                                                 <Text
-                                                                    style={{ color: 'white', fontWeight: '500', fontSize: 12, paddingRight: 3 }}
+                                                                    style={styles.buttonTableDataDetailText}
                                                                 >Detail</Text>
                                                             </View>
                                                         </TouchableOpacity>
@@ -3050,32 +2524,20 @@ export default function HomeScreen({ navigation }) {
                             <>
 
                                 <View
-                                    style={{
-                                        backgroundColor: 'white',
-                                        padding: 10,
-                                        borderRadius: 10,
-                                        shadowColor: '#000',
-                                        shadowOffset: {
-                                            width: 0,
-                                            height: 1,
-                                        },
-                                        shadowOpacity: 0.18,
-                                        shadowRadius: 1.0,
-                                        elevation: 1
-                                    }}
+                                    style={styles.cardListTable}
                                 >
                                     <View
-                                        style={{ flexDirection: 'row', marginBottom: 6, gap: 6, alignItems: 'center' }}
+                                        style={styles.listTableThead}
                                     >
-                                        <Text style={{ flex: 4, fontWeight: '600', color: '#444' }}>Dikirim Pada</Text>
-                                        <Text style={{ flex: 5, fontWeight: '600', color: '#444' }}>Status</Text>
-                                        <Text style={{ flex: 3, fontWeight: '600', color: '#444' }}>Aksi</Text>
+                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Dikirim Pada</Text>
+                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
+                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
                                     </View>
                                     {
                                         arrHistoryPengajuanRevisiAbsen.map((historyPengajuanRevisiAbsen, index) => (
                                             <View
                                                 key={index}
-                                                style={{ flexDirection: 'row', marginBottom: 5, gap: 6, alignItems: 'center' }}
+                                                style={styles.listTableTbody}
                                             >
                                                 <Text style={{ flex: 4 }}>{moment(historyPengajuanRevisiAbsen.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                 <View style={{ flex: 5 }}>
@@ -3090,10 +2552,10 @@ export default function HomeScreen({ navigation }) {
                                                                 setObjDetailHistoryPengajuanRevisiAbsen(historyPengajuanRevisiAbsen)
                                                                 setShowModalDetailHistoryPengajuanRevisiAbsen(true)
                                                             }}
-                                                            style={{ backgroundColor: '#3b82f6', paddingVertical: 2, paddingHorizontal: 5, alignSelf: 'flex-start', borderRadius: 3 }}
+                                                            style={styles.buttonTableDataDetail}
                                                         >
                                                             <View
-                                                                style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}
+                                                                style={styles.buttonTableDataDetailInner}
                                                             >
                                                                 <MaterialCommunityIcons
                                                                     name="information-outline"
@@ -3101,7 +2563,7 @@ export default function HomeScreen({ navigation }) {
                                                                     size={20}
                                                                 />
                                                                 <Text
-                                                                    style={{ color: 'white', fontWeight: '500', fontSize: 12, paddingRight: 3 }}
+                                                                    style={styles.buttonTableDataDetailText}
                                                                 >Detail</Text>
                                                             </View>
                                                         </TouchableOpacity>
@@ -3228,4 +2690,195 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         borderRadius: 5,
     },
+    modalOuter: {
+        flex: 1,
+        justifyContent: 'center'
+    },
+    modalCard: {
+        backgroundColor: 'white',
+        height: 'auto',
+        borderRadius: 7,
+        paddingVertical: 25,
+        position: 'relative'
+    },
+    modalTitle: {
+        textAlign: 'center',
+        fontSize: 20,
+        fontWeight: '500',
+        marginBottom: 20
+    },
+    modalErrorMessage: {
+        width: Dimensions.get('window').width - 100,
+        backgroundColor: '#ef4444',
+        color: '#FFF',
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 4,
+        marginBottom: 10,
+        marginTop: -7
+    },
+    modalPhotoPreview: {
+        width: Dimensions.get('window').width - 100,
+        height: Dimensions.get('window').width - 100,
+        borderRadius: 4
+    },
+    modalButtonTakeAPhoto: {
+        borderRadius: 8,
+        paddingVertical: 15,
+        marginTop: 12,
+        width: Dimensions.get('window').width - 100,
+        backgroundColor: '#3498db',
+    },
+    flexCenteringElement: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    buttonTextModal: {
+        fontSize: 16,
+        fontWeight: '500',
+        textAlign: 'center',
+        color: '#FFF'
+    },
+    buttonCloseModal: {
+        paddingVertical: 15,
+        borderRadius: 5,
+        flex: 1,
+        backgroundColor: '#64748b'
+    },
+    buttonSuccessModal: {
+        paddingVertical: 15,
+        borderRadius: 5,
+        flex: 1,
+        backgroundColor: '#22c55e'
+    },
+    modalButtonActionWrapper: {
+        width: Dimensions.get('window').width - 100,
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'row',
+        gap: 10
+    },
+    modalHorizontalLine: {
+        marginVertical: 20,
+        backgroundColor: '#cbd5e1',
+        height: 2,
+        width: Dimensions.get('window').width - 100
+    },
+    disabledTextArea: {
+        color: '#333',
+        height: 'unset',
+        textAlignVertical: 'top',
+        backgroundColor: '#d1d5db'
+    },
+    buttonChooseFile: {
+        borderWidth: 1,
+        borderColor: 'gray',
+        width: 100,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 4
+    },
+    fileAttachmentTextModal: {
+        marginTop: -2,
+        marginBottom: 8,
+        color: '#000'
+    },
+    enabledModalTextarea: {
+        color: '#333',
+        height: 'unset',
+        textAlignVertical: 'top'
+    },
+    disabledTextInput: {
+        color: '#333',
+        backgroundColor: '#d1d5db'
+    },
+    buttonPreviewFileModal: {
+        backgroundColor: '#0ea5e9',
+        width: 100,
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 4
+    },
+    buttonTextPreviewFileModal: {
+        textAlign: 'center',
+        fontWeight: '500',
+        color: '#FFF'
+    },
+    buttonMainMenuAction: {
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.18,
+        shadowRadius: 1.0,
+        flex: 1,
+        backgroundColor: '#3498db',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        borderRadius: 5
+    },
+    buttonMainMenuText: {
+        marginTop: 5,
+        color: 'white',
+        fontWeight: '500',
+        textAlign: 'center'
+    },
+    cardListTable: {
+        backgroundColor: 'white',
+        padding: 10,
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.18,
+        shadowRadius: 1.0,
+        elevation: 1
+    },
+    listTableThead: {
+        flexDirection: 'row',
+        marginBottom: 6,
+        gap: 6,
+        alignItems: 'center'
+    },
+    listTableTbody: {
+        flexDirection: 'row',
+        marginBottom: 5,
+        gap: 6,
+        alignItems: 'center'
+    },
+    listTableTheadTD: {
+        fontWeight: '600', color: '#444'
+    },
+    buttonTableDataDetail: {
+        backgroundColor: '#3b82f6',
+        paddingVertical: 2,
+        paddingHorizontal: 5,
+        alignSelf: 'flex-start',
+        borderRadius: 3
+    },
+    buttonTableDataDetailInner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3
+    },
+    buttonTableDataDetailText: {
+        color: 'white',
+        fontWeight: '500',
+        fontSize: 12,
+        paddingRight: 3
+    },
+    buttonListTableViewMore: {
+        backgroundColor: '#3498db',
+        alignSelf: 'center',
+        paddingVertical: 7,
+        paddingHorizontal: 20,
+        borderRadius: 7,
+        marginTop: 15
+    }
 });
