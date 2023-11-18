@@ -12,6 +12,7 @@ import {
     Linking,
     Dimensions,
     TextInput,
+    RefreshControl,
 } from 'react-native';
 import Modal from "react-native-modal";
 import RNPickerSelect from 'react-native-picker-select';
@@ -65,6 +66,7 @@ export default function HomeScreen({ navigation }) {
     const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState({})
     const [arrHistoryPengajuanIzinSakit, setArrHistoryPengajuanIzinSakit] = useState({})
     const [arrHistoryPengajuanRevisiAbsen, setArrHistoryPengajuanRevisiAbsen] = useState({})
+    const [refresh, setRefersh] = useState(false)
 
     /**
      * History Pengajuan Revisi Absen Utils State
@@ -432,6 +434,8 @@ export default function HomeScreen({ navigation }) {
     }
 
     const loadBanners = async () => {
+        setLoadingBanners(true)
+
         const token = await AsyncStorage.getItem('apiToken')
 
         Axios.get('/banners', {
@@ -451,6 +455,8 @@ export default function HomeScreen({ navigation }) {
     }
 
     const loadNews = async () => {
+        setLoadingNews(true)
+
         const token = await AsyncStorage.getItem('apiToken')
 
         Axios.get('/news?size=5', {
@@ -2125,7 +2131,22 @@ export default function HomeScreen({ navigation }) {
                 </View>
             </View>
             <View style={styles.headerBorderBottom}></View>
-            <ScrollView style={{ padding: 15 }}>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refresh}
+                        onRefresh={() => {
+                            setRefersh(true)
+
+                            refreshListDataAndStatusData()
+                            loadBanners()
+                            loadNews()
+
+                            setRefersh(false)
+                        }}
+                    />}
+                style={{ padding: 15 }}
+            >
                 {/* carousel */}
                 <View style={styles.sliderContainer}>
                     {loadingBanners ? (
