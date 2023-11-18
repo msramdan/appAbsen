@@ -48,8 +48,8 @@ import { PERMISSIONS, checkMultiple } from "react-native-permissions";
 import Axios from '../../utils/Axios';
 import { Redirect } from '../../utils/Redirect';
 import DatePicker from 'react-native-date-picker';
-import moment from 'moment';
 import 'moment/locale/id';
+
 export default function HomeScreen({ navigation }) {
 
     /**
@@ -61,48 +61,7 @@ export default function HomeScreen({ navigation }) {
     const [currentAuthEmployee, setCurrentAuthEmployee] = useState({})
     const [banners, setBanners] = useState([])
     const [news, setNews] = useState([])
-    const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState({})
-    const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState({})
-    const [arrHistoryPengajuanCuti, setArrHistoryPengajuanCuti] = useState({})
-    const [arrHistoryPengajuanIzinSakit, setArrHistoryPengajuanIzinSakit] = useState({})
-    const [arrHistoryPengajuanRevisiAbsen, setArrHistoryPengajuanRevisiAbsen] = useState({})
     const [refresh, setRefersh] = useState(false)
-
-    /**
-     * History Pengajuan Revisi Absen Utils State
-     * 
-     */
-    const [loadingHistoryPengajuanRevisiAbsen, setLoadingHistoryPengajuanRevisiAbsen] = useState(true)
-    const [objDetailHistoryPengajuanRevisiAbsen, setObjDetailHistoryPengajuanRevisiAbsen] = useState({})
-    const [showModalDetailHistoryPengajuanRevisiAbsen, setShowModalDetailHistoryPengajuanRevisiAbsen] = useState(false)
-
-    /**
-     * History Pengajuan Izin / Sakit Utils State
-     * 
-     */
-    const [loadingHistoryPengajuanIzinSakit, setLoadingHistoryPengajuanIzinSakit] = useState(true)
-    const [objDetailHistoryPengajuanIzinSakit, setObjDetailHistoryPengajuanIzinSakit] = useState({})
-    const [showModalDetailHistoryPengajuanIzinSakit, setShowModalDetailHistoryPengajuanIzinSakit] = useState(false)
-
-    /**
-     * History Pengajuan Cuti Utils State
-     * 
-     */
-    const [loadingHistoryPengajuanCuti, setLoadingHistoryPengajuanCuti] = useState(true)
-    const [objDetailHistoryPengajuanCuti, setObjDetailHistoryPengajuanCuti] = useState({})
-    const [showModalDetailHistoryPengajuanCuti, setShowModalDetailHistoryPengajuanCuti] = useState(false)
-
-    /**
-     * History Presence Monthly Utils State
-     * 
-     */
-    const [loadingHistoryPresenceMonthly, setLoadingHistoryPresenceMonthly] = useState(true)
-
-    /**
-     * Employees Today Not Present Utils State
-     * 
-     */
-    const [loadingEmployeesTodayNotPresent, setLoadingEmployeesTodayNotPresent] = useState(true)
 
     /**
      * News Utils State
@@ -192,11 +151,6 @@ export default function HomeScreen({ navigation }) {
         loadStateTodayIzinOrSakit()
         loadBanners()
         loadNews()
-        loadEmployeesTodayNotPreset()
-        loadArrHistoryPresenceMonthly()
-        loadArrHistoryPengajuanCuti()
-        loadArrHistoryPengajuanIzinSakit()
-        loadArrHistoryPengajuanRevisiAbsen()
     }, [])
 
     useEffect(() => {
@@ -243,151 +197,6 @@ export default function HomeScreen({ navigation }) {
         }
     }, [stateTodayPresence])
 
-    const loadArrHistoryPresenceMonthly = async (apiSourceUrl = null) => {
-        setLoadingHistoryPresenceMonthly(true)
-
-        const token = await AsyncStorage.getItem('apiToken')
-
-        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/history-presence-monthly', {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        }).then((res) => {
-            if (res) {
-                if (arrHistoryPresenceMonthly.data && apiSourceUrl) {
-                    const dataHistoryPresenceMonthlyAppended = [...arrHistoryPresenceMonthly.data]
-
-                    dataHistoryPresenceMonthlyAppended.push.apply(dataHistoryPresenceMonthlyAppended, res.data.data.data)
-                    res.data.data.data = dataHistoryPresenceMonthlyAppended
-                }
-
-                setArrHistoryPresenceMonthly(res.data.data)
-            }
-        }).catch((err) => {
-            if (err.response.status == 401) {
-                Redirect.toLoginScreen(navigation)
-            }
-        }).finally(() => {
-            setLoadingHistoryPresenceMonthly(false)
-        })
-    }
-
-    const loadArrHistoryPengajuanCuti = async (apiSourceUrl = null) => {
-        setLoadingHistoryPengajuanCuti(true)
-
-        const token = await AsyncStorage.getItem('apiToken')
-
-        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-cuti', {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        }).then((res) => {
-            if (res) {
-                if (arrHistoryPengajuanCuti.data && apiSourceUrl) {
-                    const dataHistoryPengajuanCuti = [...arrHistoryPengajuanCuti.data]
-
-                    dataHistoryPengajuanCuti.push.apply(dataHistoryPengajuanCuti, res.data.data.data)
-                    res.data.data.data = dataHistoryPengajuanCuti
-                }
-
-                setArrHistoryPengajuanCuti(res.data.data)
-            }
-        }).catch((err) => {
-            if (err.response.status == 401) {
-                Redirect.toLoginScreen(navigation)
-            }
-        }).finally(() => {
-            setLoadingHistoryPengajuanCuti(false)
-        })
-    }
-
-    const loadArrHistoryPengajuanIzinSakit = async (apiSourceUrl = null) => {
-        setLoadingHistoryPengajuanIzinSakit(true)
-
-        const token = await AsyncStorage.getItem('apiToken')
-
-        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-izin-sakit', {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        }).then((res) => {
-            if (res) {
-
-                if (arrHistoryPengajuanIzinSakit.data && apiSourceUrl) {
-                    const dataHistoryPengajuanIzinSakitAppended = [...arrHistoryPengajuanIzinSakit.data]
-
-                    dataHistoryPengajuanIzinSakitAppended.push.apply(dataHistoryPengajuanIzinSakitAppended, res.data.data.data)
-                    res.data.data.data = dataHistoryPengajuanIzinSakitAppended
-                }
-
-                setArrHistoryPengajuanIzinSakit(res.data.data)
-            }
-        }).catch((err) => {
-            if (err.response.status == 401) {
-                Redirect.toLoginScreen(navigation)
-            }
-        }).finally(() => {
-            setLoadingHistoryPengajuanIzinSakit(false)
-        })
-    }
-
-    const loadArrHistoryPengajuanRevisiAbsen = async (apiSourceUrl = null) => {
-        setLoadingHistoryPengajuanRevisiAbsen(true)
-
-        const token = await AsyncStorage.getItem('apiToken')
-
-        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-revisi-absen', {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        }).then((res) => {
-            if (res) {
-                if (arrHistoryPengajuanRevisiAbsen.data && apiSourceUrl) {
-                    const dataHistoryPengajuanRevisiAbsenAppended = [...arrHistoryPengajuanRevisiAbsen.data]
-
-                    dataHistoryPengajuanRevisiAbsenAppended.push.apply(dataHistoryPengajuanRevisiAbsenAppended, res.data.data.data)
-                    res.data.data.data = dataHistoryPengajuanRevisiAbsenAppended
-                }
-
-                setArrHistoryPengajuanRevisiAbsen(res.data.data)
-            }
-        }).catch((err) => {
-            if (err.response.status == 401) {
-                Redirect.toLoginScreen(navigation)
-            }
-        }).finally(() => {
-            setLoadingHistoryPengajuanRevisiAbsen(false)
-        })
-    }
-
-    const loadEmployeesTodayNotPreset = async (apiSourceUrl = null) => {
-        setLoadingEmployeesTodayNotPresent(true)
-        const token = await AsyncStorage.getItem('apiToken')
-
-        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/all-employees-today-not-present', {
-            headers: {
-                Authorization: 'Bearer ' + token
-            }
-        }).then((res) => {
-            if (res) {
-                if (employeesTodayNotPreset.data && apiSourceUrl) {
-                    const dataEmployeesTodayNotPresentAppended = [...employeesTodayNotPreset.data]
-
-                    dataEmployeesTodayNotPresentAppended.push.apply(dataEmployeesTodayNotPresentAppended, res.data.data.data)
-                    res.data.data.data = dataEmployeesTodayNotPresentAppended
-                }
-
-                setEmployeesTodayNotPreset(res.data.data)
-            }
-        }).catch((err) => {
-            if (err.response.status == 401) {
-                Redirect.toLoginScreen(navigation)
-            }
-        }).finally(() => {
-            setLoadingEmployeesTodayNotPresent(false)
-        })
-    }
-
     const loadStateTodayPresence = async () => {
         const token = await AsyncStorage.getItem('apiToken')
 
@@ -429,12 +238,6 @@ export default function HomeScreen({ navigation }) {
     const refreshListDataAndStatusData = () => {
         loadStateTodayPresence()
         loadStateTodayIzinOrSakit()
-
-        loadArrHistoryPresenceMonthly()
-        loadArrHistoryPengajuanCuti()
-        loadArrHistoryPengajuanIzinSakit()
-        loadArrHistoryPengajuanRevisiAbsen()
-        loadEmployeesTodayNotPreset()
     }
 
     const loadBanners = async () => {
@@ -1476,6 +1279,10 @@ export default function HomeScreen({ navigation }) {
                         <View
                             style={styles.modalCard}
                         >
+                            {
+                                loadingDoPengajuanRevisiAbsen ?
+                                    <Loading style={styles.loading} /> : <></>
+                            }
                             <Text
                                 style={styles.modalTitle}
                             >Pengajuan Revisi Absen</Text>
@@ -1649,417 +1456,6 @@ export default function HomeScreen({ navigation }) {
             </Modal>
             {/* End of Modal Pengajuan Revisi Absen */}
 
-            {/* Modal Detail History Pengajuan Izin / Sakit */}
-            <Modal isVisible={showModalDetailHistoryPengajuanIzinSakit}>
-                <View style={styles.modalOuter}>
-                    <View>
-                        <View
-                            style={styles.modalCard}
-                        >
-                            <Text
-                                style={styles.modalTitle}
-                            >Detail History Pengajuan Izin / Sakit</Text>
-
-                            <View
-                                style={{ alignItems: 'center' }}
-                            >
-
-                                <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                    }}
-                                >
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>Tanggal</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal"
-                                            editable={false}
-                                            value={objDetailHistoryPengajuanIzinSakit.date}
-                                        />
-                                    </View>
-
-                                    <Text style={{
-                                        marginBottom: 5
-                                    }}>Description</Text>
-                                    <TextInput
-                                        style={[styles.input, styles.disabledTextInput]}
-                                        placeholder="Tanggal Awal"
-                                        editable={false}
-                                        value={objDetailHistoryPengajuanIzinSakit.description}
-                                    />
-                                </View>
-
-                                <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                    }}
-                                >
-                                    <Text style={{
-                                        marginBottom: 5
-                                    }}>Detailed Description</Text>
-                                    <TextInput
-                                        style={[styles.input, styles.disabledTextArea]}
-                                        placeholder="Detailed Description"
-                                        multiline={true}
-                                        numberOfLines={3}
-                                        editable={false}
-                                        value={objDetailHistoryPengajuanIzinSakit.detailed_description}
-                                    />
-                                </View>
-
-
-                                <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                    }}
-                                >
-                                    <Text style={{
-                                        marginBottom: 5
-                                    }}>File Dokumen</Text>
-                                    {
-                                        objDetailHistoryPengajuanIzinSakit.file_attachment ?
-                                            <View>
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        Linking.openURL(objDetailHistoryPengajuanIzinSakit.file_attachment)
-                                                    }}
-                                                    style={styles.buttonPreviewFileModal}
-                                                >
-                                                    <Text
-                                                        style={styles.buttonTextPreviewFileModal}
-                                                    >Lihat File</Text>
-                                                </TouchableOpacity>
-                                            </View> : <Text style={{ color: '#333', fontWeight: '500' }}>Tidak ada file dokumen</Text>
-                                    }
-
-                                    <View>
-                                        <Text style={{
-                                            marginTop: 8,
-                                            marginBottom: 5
-                                        }}>Status</Text>
-                                        <Text style={{ backgroundColor: `${objDetailHistoryPengajuanIzinSakit.status == 'Waiting' ? '#1e293b' : `${objDetailHistoryPengajuanIzinSakit.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, borderRadius: 3 }}>{
-                                            objDetailHistoryPengajuanIzinSakit.status
-                                        }</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            marginTop: 8,
-                                            marginBottom: 5
-                                        }}>Note Review</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextArea]}
-                                            placeholder="Note Review"
-                                            editable={false}
-                                            multiline={true}
-                                            numberOfLines={3}
-                                            value={objDetailHistoryPengajuanIzinSakit.note_review}
-                                        />
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View
-                                style={{ alignItems: 'center' }}
-                            >
-                                <View
-                                    style={styles.modalHorizontalLine}
-                                ></View>
-                                <View
-                                    style={styles.modalButtonActionWrapper}
-                                >
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            setShowModalDetailHistoryPengajuanIzinSakit(false)
-                                        }}
-                                        style={styles.buttonCloseModal}
-                                    >
-                                        <Text
-                                            style={styles.buttonTextModal}
-                                        >Tutup</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-            {/* End of Modal Detail History Pengajuan Izin / Sakit */}
-
-            {/* Modal Detail History Pengajuan Cuti */}
-            <Modal isVisible={showModalDetailHistoryPengajuanCuti}>
-                <View style={styles.modalOuter}>
-                    <View>
-                        <View
-                            style={styles.modalCard}
-                        >
-                            {
-                                loadingDoPengajuanRevisiAbsen ?
-                                    <Loading style={styles.loading} /> : <></>
-                            }
-
-                            <Text
-                                style={styles.modalTitle}
-                            >Detail History Pengajuan Cuti</Text>
-
-                            <View
-                                style={{ alignItems: 'center' }}
-                            >
-                                <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                    }}
-                                >
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>Tanggal Awal</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal Awal"
-                                            editable={false}
-                                            value={objDetailHistoryPengajuanCuti.start_date}
-                                        />
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>Tanggal Akhir</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal Akhir"
-                                            editable={false}
-                                            value={objDetailHistoryPengajuanCuti.end_date}
-                                        />
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>Alasan</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextArea]}
-                                            placeholder="Alasan"
-                                            editable={false}
-                                            multiline={true}
-                                            numberOfLines={3}
-                                            value={objDetailHistoryPengajuanCuti.reason}
-                                        />
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>File Dokumen</Text>
-
-                                        <TouchableOpacity
-                                            onPress={() => {
-                                                Linking.openURL(objDetailHistoryPengajuanCuti.file_attachment)
-                                            }}
-                                            style={{
-                                                backgroundColor: '#0ea5e9',
-                                                width: 100,
-                                                paddingVertical: 6,
-                                                paddingHorizontal: 10,
-                                                borderRadius: 4
-                                            }}
-                                        >
-                                            <Text
-                                                style={{
-                                                    textAlign: 'center',
-                                                    fontWeight: '500',
-                                                    color: '#FFF'
-                                                }}
-                                            >Lihat File</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            marginTop: 8,
-                                            marginBottom: 5
-                                        }}>Status</Text>
-                                        <Text style={{ backgroundColor: `${objDetailHistoryPengajuanCuti.status == 'Waiting' ? '#1e293b' : `${objDetailHistoryPengajuanCuti.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, borderRadius: 3 }}>{
-                                            objDetailHistoryPengajuanCuti.status
-                                        }</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            marginTop: 8,
-                                            marginBottom: 5
-                                        }}>Note Review</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextArea]}
-                                            placeholder="Note Review"
-                                            editable={false}
-                                            multiline={true}
-                                            numberOfLines={3}
-                                            value={objDetailHistoryPengajuanCuti.note_review}
-                                        />
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View
-                                style={{ alignItems: 'center' }}
-                            >
-                                <View
-                                    style={styles.modalHorizontalLine}
-                                ></View>
-                                <View
-                                    style={styles.modalButtonActionWrapper}
-                                >
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            setShowModalDetailHistoryPengajuanCuti(false)
-                                        }}
-                                        style={styles.buttonCloseModal}
-                                    >
-                                        <Text
-                                            style={styles.buttonTextModal}
-                                        >Tutup</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-            {/* End of Modal Detail History Pengajuan Cuti */}
-
-            {/* Modal Detail History Pengajuan Revisi Absen */}
-            <Modal isVisible={showModalDetailHistoryPengajuanRevisiAbsen}>
-                <View style={styles.modalOuter}>
-                    <View>
-                        <View
-                            style={styles.modalCard}
-                        >
-                            <Text
-                                style={styles.modalTitle}
-                            >Detail History Pengajuan Revisi Absen</Text>
-
-                            <View
-                                style={{ alignItems: 'center' }}
-                            >
-
-                                <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                    }}
-                                >
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>Tanggal</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal"
-                                            editable={false}
-                                            value={objDetailHistoryPengajuanRevisiAbsen.date}
-                                        />
-                                    </View>
-
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>Clock In</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Clock In"
-                                            editable={false}
-                                            value={objDetailHistoryPengajuanRevisiAbsen.clock_in}
-                                        />
-                                    </View>
-
-                                    <View>
-                                        <Text style={{
-                                            marginBottom: 5
-                                        }}>Clock Out</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Clock Out"
-                                            editable={false}
-                                            value={objDetailHistoryPengajuanRevisiAbsen.clock_out}
-                                        />
-                                    </View>
-                                </View>
-
-                                <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                    }}
-                                >
-                                    <Text style={{
-                                        marginBottom: 5
-                                    }}>Reason</Text>
-                                    <TextInput
-                                        style={[styles.input, styles.disabledTextArea]}
-                                        placeholder="Reason"
-                                        multiline={true}
-                                        numberOfLines={3}
-                                        editable={false}
-                                        value={objDetailHistoryPengajuanRevisiAbsen.reason}
-                                    />
-                                </View>
-
-
-                                <View
-                                    style={{
-                                        width: Dimensions.get('window').width - 100,
-                                    }}
-                                >
-                                    <View>
-                                        <Text style={{
-                                            marginTop: 8,
-                                            marginBottom: 5
-                                        }}>Status</Text>
-                                        <Text style={{ backgroundColor: `${objDetailHistoryPengajuanRevisiAbsen.status == 'Waiting' ? '#1e293b' : `${objDetailHistoryPengajuanRevisiAbsen.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}`, alignSelf: 'flex-start', color: 'white', fontWeight: '500', paddingVertical: 2, paddingHorizontal: 5, borderRadius: 3 }}>{
-                                            objDetailHistoryPengajuanRevisiAbsen.status
-                                        }</Text>
-                                    </View>
-                                    <View>
-                                        <Text style={{
-                                            marginTop: 8,
-                                            marginBottom: 5
-                                        }}>Note Review</Text>
-                                        <TextInput
-                                            style={[styles.input, styles.disabledTextArea]}
-                                            placeholder="Note Review"
-                                            editable={false}
-                                            multiline={true}
-                                            numberOfLines={3}
-                                            value={objDetailHistoryPengajuanRevisiAbsen.note_review}
-                                        />
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View
-                                style={{ alignItems: 'center' }}
-                            >
-                                <View
-                                    style={styles.modalHorizontalLine}
-                                ></View>
-                                <View
-                                    style={styles.modalButtonActionWrapper}
-                                >
-                                    <TouchableOpacity
-                                        onPress={() => {
-                                            setShowModalDetailHistoryPengajuanRevisiAbsen(false)
-                                        }}
-                                        style={styles.buttonCloseModal}
-                                    >
-                                        <Text
-                                            style={styles.buttonTextModal}
-                                        >Tutup</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
-            {/* End of Modal Detail History Pengajuan Revisi Absen */}
-
             {/* Confirm Dialog */}
             <ConfirmDialog
                 title="Akses Lokasi Diperlukan"
@@ -2167,6 +1563,7 @@ export default function HomeScreen({ navigation }) {
                         />
                     )}
                 </View>
+
                 {/* Menu */}
                 <View style={styles.productContainer}>
                     <Text style={[styles.productText, { marginBottom: 10 }]}>MAIN MENU</Text>
@@ -2184,7 +1581,7 @@ export default function HomeScreen({ navigation }) {
                             <MaterialCommunityIcons
                                 name="location-enter"
                                 style={[styles.postIcon, { color: 'white' }]}
-                                size={40}
+                                size={30}
                             />
                             <Text style={styles.buttonMainMenuText}>Clock In</Text>
                         </TouchableOpacity>
@@ -2202,7 +1599,7 @@ export default function HomeScreen({ navigation }) {
                             <MaterialCommunityIcons
                                 name="file-document"
                                 style={[styles.postIcon, { color: 'white' }]}
-                                size={40}
+                                size={30}
                             />
                             <Text style={styles.buttonMainMenuText}>Izin atau Sakit</Text>
                         </TouchableOpacity>
@@ -2220,12 +1617,10 @@ export default function HomeScreen({ navigation }) {
                             <MaterialCommunityIcons
                                 name="location-exit"
                                 style={[styles.postIcon, { color: 'white' }]}
-                                size={40}
+                                size={30}
                             />
                             <Text style={styles.buttonMainMenuText}>Clock Out</Text>
                         </TouchableOpacity>
-                    </View>
-                    <View style={{ gap: 15, marginTop: 15, flexDirection: 'row' }}>
                         <TouchableOpacity
                             disabled={!buttonPengajuanCutiEnabled}
                             onPress={() => {
@@ -2238,11 +1633,13 @@ export default function HomeScreen({ navigation }) {
                             }]}>
                             <MaterialCommunityIcons
                                 name="calendar"
-                                style={[styles.postIcon, { color: 'white', transform: [{ translateY: -7 }] }]}
-                                size={40}
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={30}
                             />
                             <Text style={styles.buttonMainMenuText}>Pengajuan Cuti</Text>
                         </TouchableOpacity>
+                    </View>
+                    <View style={{ gap: 15, marginTop: 15, flexDirection: 'row' }}>
                         <TouchableOpacity
                             disabled={!buttonPengajuanRevisiAbsenEnabled}
                             onPress={() => {
@@ -2256,14 +1653,106 @@ export default function HomeScreen({ navigation }) {
                             <MaterialCommunityIcons
                                 name="calendar-edit"
                                 style={[styles.postIcon, { color: 'white' }]}
-                                size={40}
+                                size={30}
                             />
                             <Text style={styles.buttonMainMenuText}>Pengajuan Revisi Absen</Text>
                         </TouchableOpacity>
                         <View style={{ flex: 1 }}></View>
+                        <View style={{ flex: 1 }}></View>
+                        <View style={{ flex: 1 }}></View>
                     </View>
                 </View>
                 {/* End of Menu */}
+
+                {/* History Menu */}
+                <View
+                    style={styles.productContainer}
+                >
+                    <Text style={[styles.productText, { marginBottom: 10 }]}>RIWAYAT MENU</Text>
+                    <View style={{ gap: 15, flexDirection: 'row' }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate('TidakMasukHariIniScreen')
+                            }}
+                            style={[styles.buttonMainMenuAction, {
+                                opacity: 1,
+                            }]}>
+                            <MaterialCommunityIcons
+                                name="label-off"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={30}
+                            />
+                            <Text style={styles.buttonMainMenuText}>Tidak Masuk Hari Ini</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate('RiwayatAbsensiScreen')
+                            }}
+                            style={[styles.buttonMainMenuAction, {
+                                opacity: 1,
+                            }]}>
+                            <MaterialCommunityIcons
+                                name="history"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={30}
+                            />
+                            <Text style={styles.buttonMainMenuText}>Riwayat {"\n"} Absensi</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate('RiwayatPengajuanIzinSakitScreen')
+                            }}
+                            style={[styles.buttonMainMenuAction, {
+                                opacity: 1,
+                            }]}>
+                            <MaterialCommunityIcons
+                                name="calendar-minus"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={30}
+                            />
+                            <Text style={styles.buttonMainMenuText}>Riwayat Pengajuan {"\n"} Izin / Sakit</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate('RiwayatPengajuanCutiScreen')
+                            }}
+                            style={[styles.buttonMainMenuAction, {
+                                opacity: 1,
+                            }]}>
+                            <MaterialCommunityIcons
+                                name="calendar-multiselect"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={30}
+                            />
+                            <Text style={styles.buttonMainMenuText}>Riwayat Pengajuan Cuti</Text>
+                        </TouchableOpacity>
+                    </View>
+                    <View style={{ marginTop: 15, gap: 15, flexDirection: 'row' }}
+                    >
+                        <View style={{ flex: 1 }}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    navigation.navigate('RiwayatPengajuanRevisiAbsensiScreen')
+                                }}
+                                style={[styles.buttonMainMenuAction, {
+                                    opacity: 1,
+                                    flex: 1
+                                }]}>
+                                <MaterialCommunityIcons
+                                    name="calendar-multiselect"
+                                    style={[styles.postIcon, { color: 'white' }]}
+                                    size={30}
+                                />
+                                <Text style={styles.buttonMainMenuText}>Riwayat Pengajuan Revisi Absensi</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View style={{ flex: 1 }}></View>
+                        <View style={{ flex: 1 }}></View>
+                        <View style={{ flex: 1 }}></View>
+                    </View>
+                </View>
+                {/* End of History Menu */}
+
                 {/* posts / berita */}
                 <View style={styles.postContainer}>
                     <MaterialCommunityIcons
@@ -2274,7 +1763,7 @@ export default function HomeScreen({ navigation }) {
 
                     <Text style={styles.postText}>BERITA TERBARU</Text>
                 </View>
-                <View style={{ flex: 1, flexDirection: 'row' }}>
+                <View style={{ flex: 1, flexDirection: 'row', marginBottom: 250 }}>
                     {loadingNews ? (
                         <Loading />
                     ) : (
@@ -2291,452 +1780,6 @@ export default function HomeScreen({ navigation }) {
                         </>
                     )}
                 </View>
-
-                {/* List Tidak Masuk Hari Ini */}
-                <View style={{ marginTop: -10 }}>
-                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
-                        <MaterialCommunityIcons
-                            name="label-off"
-                            style={styles.postIcon}
-                            size={20}
-                        />
-
-                        <Text style={styles.postText}>TIDAK MASUK HARI INI</Text>
-                    </View>
-                    {
-                        loadingEmployeesTodayNotPresent ?
-                            <Loading /> :
-                            <>
-
-                                <View
-                                    style={styles.cardListTable}
-                                >
-                                    <View
-                                        style={styles.listTableThead}
-                                    >
-                                        <Text style={[{ flex: 1 }, styles.listTableTheadTD]}>No</Text>
-                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Nama</Text>
-                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Deskripsi</Text>
-                                    </View>
-                                    {
-                                        <FlatList
-                                            data={employeesTodayNotPreset.data}
-                                            renderItem={({ item, index, separators }) => (
-                                                <View
-                                                    key={index}
-                                                    style={styles.listTableTbody}
-                                                >
-                                                    <Text style={{ flex: 1 }}>{index + 1}</Text>
-                                                    <Text style={{ flex: 5 }}>{item.employee.full_name}</Text>
-                                                    <Text style={{ flex: 3 }}>{item.description}</Text>
-                                                </View>
-                                            )}
-                                            keyExtractor={item => item.id}
-                                            scrollEnabled={false}
-                                        />
-                                    }
-                                </View>
-                                {
-                                    employeesTodayNotPreset.next_page_url ?
-                                        <View>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    const splittedUrl = employeesTodayNotPreset.next_page_url.split('/api/mobile')
-
-                                                    loadEmployeesTodayNotPreset(splittedUrl[splittedUrl.length - 1])
-                                                }}
-                                                style={{
-                                                    backgroundColor: '#3498db',
-                                                    alignSelf: 'center',
-                                                    paddingVertical: 7,
-                                                    paddingHorizontal: 20,
-                                                    borderRadius: 7,
-                                                    marginTop: 15
-                                                }}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        color: 'white'
-                                                    }}
-                                                >Tampilkan Lebih Banyak</Text>
-                                            </TouchableOpacity>
-                                        </View> : <></>
-                                }
-                            </>
-                    }
-
-                </View>
-                {/* End of List Tidak Masuk Hari Ini */}
-
-                {/* List History Absen Bulanan */}
-                <View style={{ marginTop: -10 }}>
-                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
-                        <MaterialCommunityIcons
-                            name="history"
-                            style={styles.postIcon}
-                            size={20}
-                        />
-
-                        <Text style={styles.postText}>HISTORY ABSEN</Text>
-                    </View>
-                    {
-                        loadingHistoryPresenceMonthly ?
-                            <Loading /> :
-                            <>
-
-                                <View
-                                    style={styles.cardListTable}
-                                >
-                                    <View
-                                        style={styles.listTableThead}
-                                    >
-                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Tanggal</Text>
-                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Deskripsi</Text>
-                                    </View>
-                                    {
-                                        <FlatList
-                                            data={arrHistoryPresenceMonthly.data}
-                                            renderItem={({ item, index, separators }) => (
-                                                <View
-                                                    key={index}
-                                                    style={styles.listTableTbody}
-                                                >
-                                                    <Text style={{ flex: 3 }}>{item.date}</Text>
-                                                    <View style={{ flex: 5 }}>
-                                                        <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.is_present == 'Yes' ? '#22c55e' : '#ef4444'}` }]}>{
-                                                            item.is_present == 'Yes' ? 'Berangkat' : 'Tidak Berangkat'
-                                                        }</Text>
-                                                    </View>
-                                                    <Text style={{ flex: 4 }}>{item.description}</Text>
-                                                </View>
-                                            )}
-                                            keyExtractor={item => item.id}
-                                            scrollEnabled={false}
-                                        />
-                                    }
-                                </View>
-                                {
-                                    arrHistoryPresenceMonthly.next_page_url ?
-                                        <View>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    const splittedUrl = arrHistoryPresenceMonthly.next_page_url.split('/api/mobile')
-
-                                                    loadArrHistoryPresenceMonthly(splittedUrl[splittedUrl.length - 1])
-                                                }}
-                                                style={styles.buttonListTableViewMore}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        color: 'white'
-                                                    }}
-                                                >Tampilkan Lebih Banyak</Text>
-                                            </TouchableOpacity>
-                                        </View> : <></>
-                                }
-
-                            </>
-                    }
-
-                </View>
-                {/* End of List History Absen Diri Sendiri */}
-
-                {/* List History PENGAJUAN IZIN / SAKIT */}
-                <View style={{ marginTop: -10 }}>
-                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
-                        <MaterialCommunityIcons
-                            name="history"
-                            style={styles.postIcon}
-                            size={20}
-                        />
-
-                        <Text style={styles.postText}>HISTORY PENGAJUAN IZIN / SAKIT</Text>
-                    </View>
-                    {
-                        loadingHistoryPengajuanIzinSakit ?
-                            <Loading /> :
-                            <>
-
-                                <View
-                                    style={styles.cardListTable}
-                                >
-                                    <View
-                                        style={styles.listTableThead}
-                                    >
-                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Tanggal</Text>
-                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Desc</Text>
-                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Aksi</Text>
-                                    </View>
-                                    {
-                                        <FlatList
-                                            data={arrHistoryPengajuanIzinSakit.data}
-                                            renderItem={({ item, index, separators }) => (
-                                                <View
-                                                    key={index}
-                                                    style={styles.listTableTbody}
-                                                >
-                                                    <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
-                                                    <Text style={{ flex: 3 }}>{item.description}</Text>
-                                                    <View style={{ flex: 5 }}>
-                                                        <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}` }]}>{
-                                                            item.status
-                                                        }</Text>
-                                                    </View>
-                                                    <Text style={{ flex: 4 }}>
-                                                        <View>
-                                                            <TouchableOpacity
-                                                                onPress={() => {
-                                                                    setObjDetailHistoryPengajuanIzinSakit(item)
-                                                                    setShowModalDetailHistoryPengajuanIzinSakit(true)
-                                                                }}
-                                                                style={styles.buttonTableDataDetail}
-                                                            >
-                                                                <View
-                                                                    style={styles.buttonTableDataDetailInner}
-                                                                >
-                                                                    <MaterialCommunityIcons
-                                                                        name="information-outline"
-                                                                        style={{ color: 'white' }}
-                                                                        size={20}
-                                                                    />
-                                                                    <Text
-                                                                        style={styles.buttonTableDataDetailText}
-                                                                    >Detail</Text>
-                                                                </View>
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    </Text>
-                                                </View>
-                                            )}
-                                            keyExtractor={item => item.id}
-                                            scrollEnabled={false}
-                                        />
-                                    }
-                                </View>
-                                {
-                                    arrHistoryPengajuanIzinSakit.next_page_url ?
-                                        <View>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    const splittedUrl = arrHistoryPengajuanIzinSakit.next_page_url.split('/api/mobile')
-
-                                                    loadArrHistoryPengajuanIzinSakit(splittedUrl[splittedUrl.length - 1])
-                                                }}
-                                                style={styles.buttonListTableViewMore}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        color: 'white'
-                                                    }}
-                                                >Tampilkan Lebih Banyak</Text>
-                                            </TouchableOpacity>
-                                        </View> : <></>
-                                }
-
-                            </>
-                    }
-
-                </View>
-                {/* End of List History PENGAJUAN IZIN / SAKIT */}
-
-                {/* List History Pengajuan Cuti */}
-                <View style={{ marginTop: -10 }}>
-                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
-                        <MaterialCommunityIcons
-                            name="history"
-                            style={styles.postIcon}
-                            size={20}
-                        />
-
-                        <Text style={styles.postText}>HISTORY PENGAJUAN CUTI</Text>
-                    </View>
-                    {
-                        loadingHistoryPengajuanCuti ?
-                            <Loading /> :
-                            <>
-
-                                <View
-                                    style={styles.cardListTable}
-                                >
-                                    <View
-                                        style={styles.listTableThead}
-                                    >
-                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Tanggal</Text>
-                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
-                                    </View>
-                                    {
-                                        <FlatList
-                                            data={arrHistoryPengajuanCuti.data}
-                                            renderItem={({ item, index, separators }) => (
-                                                <View
-                                                    key={index}
-                                                    style={styles.listTableTbody}
-                                                >
-                                                    <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
-                                                    <View style={{ flex: 5 }}>
-                                                        <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}` }]}>{
-                                                            item.status
-                                                        }</Text>
-                                                    </View>
-                                                    <Text style={{ flex: 3 }}>
-                                                        <View>
-                                                            <TouchableOpacity
-                                                                onPress={() => {
-                                                                    setObjDetailHistoryPengajuanCuti(item)
-                                                                    setShowModalDetailHistoryPengajuanCuti(true)
-                                                                }}
-                                                                style={styles.buttonTableDataDetail}
-                                                            >
-                                                                <View
-                                                                    style={styles.buttonTableDataDetailInner}
-                                                                >
-                                                                    <MaterialCommunityIcons
-                                                                        name="information-outline"
-                                                                        style={{ color: 'white' }}
-                                                                        size={20}
-                                                                    />
-                                                                    <Text
-                                                                        style={styles.buttonTableDataDetailText}
-                                                                    >Detail</Text>
-                                                                </View>
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    </Text>
-                                                </View>
-                                            )}
-                                            keyExtractor={item => item.id}
-                                            scrollEnabled={false}
-                                        />
-                                    }
-                                </View>
-                                {
-                                    arrHistoryPengajuanCuti.next_page_url ?
-                                        <View>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    const splittedUrl = arrHistoryPengajuanCuti.next_page_url.split('/api/mobile')
-
-                                                    loadArrHistoryPengajuanCuti(splittedUrl[splittedUrl.length - 1])
-                                                }}
-                                                style={styles.buttonListTableViewMore}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        color: 'white'
-                                                    }}
-                                                >Tampilkan Lebih Banyak</Text>
-                                            </TouchableOpacity>
-                                        </View> : <></>
-                                }
-                            </>
-                    }
-
-                </View>
-                {/* End of List History Pengajuan Cuti */}
-
-                {/* List History Pengajuan REVISI ABSEN */}
-                <View style={{ marginBottom: 560, marginTop: -10 }}>
-                    <View style={[styles.postContainer, { marginBottom: 10 }]}>
-                        <MaterialCommunityIcons
-                            name="history"
-                            style={styles.postIcon}
-                            size={20}
-                        />
-
-                        <Text style={styles.postText}>HISTORY PENGAJUAN REVISI ABSEN</Text>
-                    </View>
-                    {
-                        loadingHistoryPengajuanRevisiAbsen ?
-                            <Loading /> :
-                            <>
-
-                                <View
-                                    style={styles.cardListTable}
-                                >
-                                    <View
-                                        style={styles.listTableThead}
-                                    >
-                                        <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Dikirim Pada</Text>
-                                        <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                        <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
-                                    </View>
-                                    {
-                                        <FlatList
-                                            data={arrHistoryPengajuanRevisiAbsen.data}
-                                            renderItem={({ item, index, separators }) => (
-                                                <View
-                                                    key={index}
-                                                    style={styles.listTableTbody}
-                                                >
-                                                    <View
-                                                        key={index}
-                                                        style={styles.listTableTbody}
-                                                    >
-                                                        <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
-                                                        <View style={{ flex: 5 }}>
-                                                            <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}` }]}>{
-                                                                item.status
-                                                            }</Text>
-                                                        </View>
-                                                        <Text style={{ flex: 3 }}>
-                                                            <View>
-                                                                <TouchableOpacity
-                                                                    onPress={() => {
-                                                                        setObjDetailHistoryPengajuanRevisiAbsen(item)
-                                                                        setShowModalDetailHistoryPengajuanRevisiAbsen(true)
-                                                                    }}
-                                                                    style={styles.buttonTableDataDetail}
-                                                                >
-                                                                    <View
-                                                                        style={styles.buttonTableDataDetailInner}
-                                                                    >
-                                                                        <MaterialCommunityIcons
-                                                                            name="information-outline"
-                                                                            style={{ color: 'white' }}
-                                                                            size={20}
-                                                                        />
-                                                                        <Text
-                                                                            style={styles.buttonTableDataDetailText}
-                                                                        >Detail</Text>
-                                                                    </View>
-                                                                </TouchableOpacity>
-                                                            </View>
-                                                        </Text>
-                                                    </View>
-                                                </View>
-                                            )}
-                                            keyExtractor={item => item.id}
-                                            scrollEnabled={false}
-                                        />
-                                    }
-                                </View>
-                                {
-                                    arrHistoryPengajuanRevisiAbsen.next_page_url ?
-                                        <View>
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    const splittedUrl = arrHistoryPengajuanRevisiAbsen.next_page_url.split('/api/mobile')
-
-                                                    loadArrHistoryPengajuanRevisiAbsen(splittedUrl[splittedUrl.length - 1])
-                                                }}
-                                                style={styles.buttonListTableViewMore}
-                                            >
-                                                <Text
-                                                    style={{
-                                                        color: 'white'
-                                                    }}
-                                                >Tampilkan Lebih Banyak</Text>
-                                            </TouchableOpacity>
-                                        </View> : <></>
-                                }
-                            </>
-                    }
-
-                </View>
-                {/* End of List History Pengajuan REVISI ABSEN */}
             </ScrollView>
         </SafeAreaView >
     );
@@ -2906,12 +1949,6 @@ const styles = StyleSheet.create({
         height: 2,
         width: Dimensions.get('window').width - 100
     },
-    disabledTextArea: {
-        color: '#333',
-        height: 'unset',
-        textAlignVertical: 'top',
-        backgroundColor: '#d1d5db'
-    },
     buttonChooseFile: {
         borderWidth: 1,
         borderColor: 'gray',
@@ -2929,22 +1966,6 @@ const styles = StyleSheet.create({
         color: '#333',
         height: 'unset',
         textAlignVertical: 'top'
-    },
-    disabledTextInput: {
-        color: '#333',
-        backgroundColor: '#d1d5db'
-    },
-    buttonPreviewFileModal: {
-        backgroundColor: '#0ea5e9',
-        width: 100,
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 4
-    },
-    buttonTextPreviewFileModal: {
-        textAlign: 'center',
-        fontWeight: '500',
-        color: '#FFF'
     },
     buttonMainMenuAction: {
         shadowColor: '#000',
@@ -2966,69 +1987,7 @@ const styles = StyleSheet.create({
         marginTop: 5,
         color: 'white',
         fontWeight: '500',
-        textAlign: 'center'
+        textAlign: 'center',
+        fontSize: 11
     },
-    cardListTable: {
-        backgroundColor: 'white',
-        padding: 10,
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.18,
-        shadowRadius: 1.0,
-        elevation: 1
-    },
-    listTableThead: {
-        flexDirection: 'row',
-        marginBottom: 6,
-        gap: 6,
-        alignItems: 'center'
-    },
-    listTableTbody: {
-        flexDirection: 'row',
-        marginBottom: 5,
-        gap: 6,
-        alignItems: 'center'
-    },
-    listTableTheadTD: {
-        fontWeight: '600', color: '#444'
-    },
-    buttonTableDataDetail: {
-        backgroundColor: '#3b82f6',
-        paddingVertical: 2,
-        paddingHorizontal: 5,
-        alignSelf: 'flex-start',
-        borderRadius: 3
-    },
-    buttonTableDataDetailInner: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 3
-    },
-    buttonTableDataDetailText: {
-        color: 'white',
-        fontWeight: '500',
-        fontSize: 12,
-        paddingRight: 3
-    },
-    buttonListTableViewMore: {
-        backgroundColor: '#3498db',
-        alignSelf: 'center',
-        paddingVertical: 7,
-        paddingHorizontal: 20,
-        borderRadius: 7,
-        marginTop: 15
-    },
-    tableDataLabelStatus: {
-        alignSelf: 'flex-start',
-        color: 'white',
-        fontWeight: '500',
-        paddingVertical: 2,
-        paddingHorizontal: 5,
-        fontSize: 12,
-        borderRadius: 3
-    }
 });

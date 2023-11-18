@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const Axios = axios.create({
-    baseURL: 'https://3043-140-213-166-221.ngrok-free.app/api/mobile',
+    baseURL: 'https://5b35-140-213-160-234.ngrok-free.app/api/mobile',
 })
 
 export default Axios
