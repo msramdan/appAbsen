@@ -362,7 +362,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                 <View
                                     style={styles.listTableThead}
                                 >
-                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Tanggal</Text>
+                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Dibuat Pada</Text>
                                     <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Desc</Text>
                                     <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
                                     <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Aksi</Text>
@@ -375,7 +375,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                                 key={index}
                                                 style={styles.listTableTbody}
                                             >
-                                                <Text style={{ flex: 4 }}>{moment(item.date, 'DD/MM/YYYY').format('Y-MM-DD')}</Text>
+                                                <Text style={{ flex: 4 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                 <Text style={{ flex: 3 }}>{item.description}</Text>
                                                 <View style={{ flex: 5 }}>
                                                     <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.status == 'Waiting' ? '#1e293b' : `${item.status == 'Rejected' ? '#ef4444' : '#22c55e'}`}` }]}>{

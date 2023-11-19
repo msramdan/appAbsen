@@ -10,6 +10,9 @@ import { Text } from "react-native";
 import DatePicker from 'react-native-date-picker';
 import { useToast } from "react-native-toast-notifications";
 
+import moment from 'moment';
+import 'moment/locale/id';
+
 export default function RiwayatAbsensiScreen() {
 
     /**
@@ -228,7 +231,7 @@ export default function RiwayatAbsensiScreen() {
                                                 key={index}
                                                 style={styles.listTableTbody}
                                             >
-                                                <Text style={{ flex: 3 }}>{item.date}</Text>
+                                                <Text style={{ flex: 3 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                 <View style={{ flex: 5 }}>
                                                     <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.is_present == 'Yes' ? '#22c55e' : '#ef4444'}` }]}>{
                                                         item.is_present == 'Yes' ? 'Berangkat' : 'Tidak Berangkat'
