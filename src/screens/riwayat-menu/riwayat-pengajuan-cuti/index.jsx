@@ -8,11 +8,19 @@ import { Redirect } from "../../../utils/Redirect";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
 import Modal from "react-native-modal";
+import DatePicker from 'react-native-date-picker';
+import { useToast } from "react-native-toast-notifications";
 
 import moment from 'moment';
 import 'moment/locale/id';
 
 export default function RiwayatPengajuanCutiScreen() {
+
+    /**
+     * Main Utils
+     * 
+     */
+    const toast = useToast();
 
     /**
      * Employees Riwayat Pengajuan Cuti Utils State
@@ -23,6 +31,26 @@ export default function RiwayatPengajuanCutiScreen() {
     const [objDetailHistoryPengajuanCuti, setObjDetailHistoryPengajuanCuti] = useState({})
     const [showModalDetailHistoryPengajuanCuti, setShowModalDetailHistoryPengajuanCuti] = useState(false)
 
+    /**
+     * Filter Tanggal Awal
+     * 
+     */
+    const [showDatePickerStartDate, setShowDatePickerStartDate] = useState(false)
+    const [filterTanggalStartDate, setFilterTanggalStartDate] = useState(null)
+
+    /**
+     * Filter Tanggal Akhir
+     * 
+     */
+    const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
+    const [filterTanggalEndDate, setFilterTanggalEndDate] = useState(null)
+
+    /**
+     * Filter Button
+     * 
+     */
+    const [isFiltered, setIsFiltered] = useState(false)
+
     useEffect(() => {
         loadArrHistoryPengajuanCuti()
     }, [])
@@ -32,7 +60,23 @@ export default function RiwayatPengajuanCutiScreen() {
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-cuti', {
+        let formattedApiSourceUrl = ''
+
+        if (apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
+            formattedApiSourceUrl = apiSourceUrl
+                + '&start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+        } else if (apiSourceUrl && !isFiltered) {
+            formattedApiSourceUrl = apiSourceUrl
+        } else if (!apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
+            formattedApiSourceUrl = '/attendances/current-employee-pengajuan-cuti'
+                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+        } else {
+            formattedApiSourceUrl = '/attendances/current-employee-pengajuan-cuti'
+        }
+
+        Axios.get(formattedApiSourceUrl, {
             headers: {
                 Authorization: 'Bearer ' + token
             }
@@ -54,6 +98,18 @@ export default function RiwayatPengajuanCutiScreen() {
         }).finally(() => {
             setLoadingHistoryPengajuanCuti(false)
         })
+    }
+
+    const doFilterDate = () => {
+        if (!filterTanggalStartDate || !filterTanggalEndDate) {
+            toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
+                type: 'danger',
+                placement: 'center'
+            })
+        } else {
+            setIsFiltered(true)
+            loadArrHistoryPengajuanCuti()
+        }
     }
 
     return (
@@ -204,6 +260,90 @@ export default function RiwayatPengajuanCutiScreen() {
 
                     <Text style={styles.postText}>RIWAYAT PENGAJUAN CUTI</Text>
                 </View>
+
+                <View style={styles.filterWrapper}>
+                    <View style={{ flex: 3 }}>
+                        <Text style={{
+                            marginBottom: 5
+                        }}>Tanggal Awal</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowDatePickerStartDate(true)
+                            }}
+                        >
+                            <TextInput
+                                style={[styles.input, { color: '#333' }]}
+                                placeholder="Tanggal Awal"
+                                editable={false}
+                                value={
+                                    filterTanggalStartDate ?
+                                        `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                                        : null
+                                }
+                            />
+                        </TouchableOpacity>
+                        <DatePicker
+                            modal
+                            mode="date"
+                            open={showDatePickerStartDate}
+                            date={filterTanggalStartDate ? filterTanggalStartDate : new Date()}
+                            onConfirm={(date) => {
+                                setShowDatePickerStartDate(false)
+                                setFilterTanggalStartDate(date)
+                            }}
+                            onCancel={() => {
+                                setShowDatePickerStartDate(false)
+                            }}
+                        />
+                    </View>
+                    <View style={{ flex: 3 }}>
+                        <Text style={{
+                            marginBottom: 5
+                        }}>Tanggal Akhir</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowDatePickerEndDate(true)
+                            }}
+                        >
+                            <TextInput
+                                style={[styles.input, { color: '#333' }]}
+                                placeholder="Tanggal Akhir"
+                                editable={false}
+                                value={
+                                    filterTanggalEndDate ?
+                                        `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+                                        : null
+                                }
+                            />
+                        </TouchableOpacity>
+                        <DatePicker
+                            modal
+                            mode="date"
+                            open={showDatePickerEndDate}
+                            date={filterTanggalEndDate ? filterTanggalEndDate : new Date()}
+                            onConfirm={(date) => {
+                                setShowDatePickerEndDate(false)
+                                setFilterTanggalEndDate(date)
+                            }}
+                            onCancel={() => {
+                                setShowDatePickerEndDate(false)
+                            }}
+                        />
+                    </View>
+                    <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
+                        <TouchableOpacity
+                            onPress={doFilterDate}
+                            style={styles.filterButton}
+                        >
+                            <MaterialCommunityIcons
+                                name="filter-variant"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={22}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
                 {
                     loadingHistoryPengajuanCuti ?
                         <Loading /> :
@@ -215,7 +355,7 @@ export default function RiwayatPengajuanCutiScreen() {
                                 <View
                                     style={styles.listTableThead}
                                 >
-                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Tanggal</Text>
+                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Dibuat Pada</Text>
                                     <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
                                     <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
                                 </View>
@@ -441,4 +581,19 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#FFF'
     },
+    filterWrapper: {
+        flexDirection: 'row',
+        gap: 10
+    },
+    filterButtonWrapper: {
+        justifyContent: 'flex-end'
+    },
+    filterButton: {
+        marginBottom: 10,
+        backgroundColor: '#1f2937',
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 6
+    }
 })

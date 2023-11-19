@@ -60,7 +60,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        let formattedApiSourceUrl = 'a'
+        let formattedApiSourceUrl = ''
 
         if (apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
             formattedApiSourceUrl = apiSourceUrl
