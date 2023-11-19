@@ -6,6 +6,7 @@ import {
     FlatList,
     StyleSheet,
     TouchableOpacity,
+    RefreshControl,
 } from 'react-native';
 
 import React, { useState, useEffect } from 'react';
@@ -39,12 +40,14 @@ export default function PostsIndexScreen() {
      */
     const [loadingNews, setLoadingNews] = useState(true)
 
+    const [refresh, setRefersh] = useState(false)
+
     useEffect(() => {
         loadNews();
     }, []);
 
     const loadNews = async (apiSourceUrl = null) => {
-
+        setLoadingNews(true)
         const token = await AsyncStorage.getItem('apiToken')
 
         setLoadingNews(true)
@@ -66,7 +69,19 @@ export default function PostsIndexScreen() {
 
     return (
         <SafeAreaView>
-            <ScrollView style={{ padding: 15 }}>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refresh}
+                        onRefresh={() => {
+                            setRefersh(true)
+
+                            loadNews()
+
+                            setRefersh(false)
+                        }}
+                    />}
+                style={{ padding: 15 }}>
 
                 <View style={styles.labelContainer}>
                     <MaterialCommunityIcons

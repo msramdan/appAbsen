@@ -6,7 +6,8 @@ import {
     FlatList,
     StyleSheet,
     TouchableOpacity,
-    TextInput
+    TextInput,
+    RefreshControl
 } from 'react-native';
 
 import React, { useState, useEffect } from 'react';
@@ -28,7 +29,7 @@ export default function EmployeeScreen({ navigation }) {
      * Main Utils
      * 
      */
-    const toast = useToast();
+    const [refresh, setRefersh] = useState(false)
 
     /**
      * Filter State
@@ -48,7 +49,9 @@ export default function EmployeeScreen({ navigation }) {
 
         let formattedApiSourceUrl = ''
 
-        if (apiSourceUrl && (filterName) && isFiltered) {
+        if (apiSourceUrl == 'reload') {
+            formattedApiSourceUrl = '/employees'
+        } else if (apiSourceUrl && (filterName) && isFiltered) {
             formattedApiSourceUrl = apiSourceUrl
                 + '&name=' + filterName
         } else if (apiSourceUrl && !isFiltered) {
@@ -80,8 +83,7 @@ export default function EmployeeScreen({ navigation }) {
 
     const doFilterDate = () => {
         if (!filterName) {
-            setIsFiltered(false)
-            loadDataEmployee()
+            loadDataEmployee('reload')
         } else {
             setIsFiltered(true)
             loadDataEmployee()
@@ -90,7 +92,20 @@ export default function EmployeeScreen({ navigation }) {
 
     return (
         <SafeAreaView>
-            <ScrollView style={{ padding: 15 }}>
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refresh}
+                        onRefresh={() => {
+                            setRefersh(true)
+
+                            setFilterName(null)
+                            loadDataEmployee('reload')
+
+                            setRefersh(false)
+                        }}
+                    />}
+                style={{ padding: 15 }}>
                 <View style={styles.labelContainer}>
                     <MaterialCommunityIcons
                         name="account"
