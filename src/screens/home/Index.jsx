@@ -138,6 +138,8 @@ export default function HomeScreen({ navigation }) {
     const [errorMessageDoIzinAtauSakit, setErrorMessageDoIzinAtauSakit] = useState(null)
     const [selectedEnumIzinSakit, setSelectedEnumIzinSakit] = useState('Izin')
     const [detailedDescription, setDetailedDescription] = useState('')
+    const [tanggalPengajuanIzinSakit, setTanggalPengajuanIzinSakit] = useState(new Date())
+    const [showDatePickerTanggalPengajuanIzinSakit, setShowDatePickerTanggalPengajuanIzinSakit] = useState(false)
 
     //init state posts
     const isFocused = useIsFocused()
@@ -174,20 +176,8 @@ export default function HomeScreen({ navigation }) {
     useEffect(() => {
         if (new Date().getDay() == 6 || new Date().getDay() == 0) {
             setButtonClockInEnabled(false)
-        } else if (stateTodayIzinOrSakit) {
-            if (stateTodayPresence) {
-                setButtonIzinOrSakitEnabled(false)
-            } else if (stateTodayIzinOrSakit.status == 'Rejected') {
-                setButtonIzinOrSakitEnabled(true)
-            } else {
-                setButtonIzinOrSakitEnabled(false)
-            }
         } else {
-            if (stateTodayPresence) {
-                setButtonIzinOrSakitEnabled(false)
-            } else {
-                setButtonIzinOrSakitEnabled(true)
-            }
+            setButtonIzinOrSakitEnabled(true)
         }
     }, [stateTodayPresence, stateTodayIzinOrSakit])
 
@@ -570,6 +560,7 @@ export default function HomeScreen({ navigation }) {
 
         formData.append('description', selectedEnumIzinSakit)
         formData.append('detailed_description', detailedDescription)
+        formData.append('date', `${tanggalPengajuanIzinSakit.getFullYear()}-${parseInt(tanggalPengajuanIzinSakit.getMonth() + 1) < 10 ? `0${parseInt(tanggalPengajuanIzinSakit.getMonth() + 1)}` : parseInt(tanggalPengajuanIzinSakit.getMonth() + 1)}-${parseInt(tanggalPengajuanIzinSakit.getDate()) < 10 ? `0${parseInt(tanggalPengajuanIzinSakit.getDate())}` : parseInt(tanggalPengajuanIzinSakit.getDate())}`)
 
         if (fileAttachmentIzinOrSakit) {
             formData.append('file_attachment', {
@@ -590,6 +581,7 @@ export default function HomeScreen({ navigation }) {
                 setfileAttachmentIzinOrSakit(null)
                 setErrorMessageDoIzinAtauSakit(null)
                 setDetailedDescription('')
+                setTanggalPengajuanIzinSakit(new Date())
 
                 setShowModalIzinAtauSakit(false)
 
@@ -615,11 +607,6 @@ export default function HomeScreen({ navigation }) {
         setLoadingDoPengajuanCuti(true)
         setErrorMessageDoPengajuanCuti(null)
 
-        if (!fileAttachmentPengajuanCuti) {
-            setErrorMessageDoPengajuanCuti('File Dokumen Wajib Diisi')
-            return
-        }
-
         const formData = new FormData();
         const token = await AsyncStorage.getItem('apiToken')
 
@@ -627,11 +614,13 @@ export default function HomeScreen({ navigation }) {
         formData.append('end_date', `${pengajuanCutiEndDate.getFullYear()}-${parseInt(pengajuanCutiEndDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanCutiEndDate.getMonth() + 1)}` : parseInt(pengajuanCutiEndDate.getMonth() + 1)}-${parseInt(pengajuanCutiEndDate.getDate()) < 10 ? `0${parseInt(pengajuanCutiEndDate.getDate())}` : parseInt(pengajuanCutiEndDate.getDate())}`)
         formData.append('reason', pengajuanCutiReason)
 
-        formData.append('file_attachment', {
-            uri: fileAttachmentPengajuanCuti.uri,
-            type: fileAttachmentPengajuanCuti.type,
-            name: fileAttachmentPengajuanCuti.name,
-        })
+        if (fileAttachmentPengajuanCuti) {
+            formData.append('file_attachment', {
+                uri: fileAttachmentPengajuanCuti.uri,
+                type: fileAttachmentPengajuanCuti.type,
+                name: fileAttachmentPengajuanCuti.name,
+            })
+        }
 
         Axios.post('/attendances/pengajuan-cuti', formData, {
             headers: {
@@ -1010,6 +999,41 @@ export default function HomeScreen({ navigation }) {
                                             { label: 'Izin', value: 'Izin' },
                                             { label: 'Sakit', value: 'Sakit' },
                                         ]}
+                                    />
+                                </View>
+
+                                <View
+                                    style={{
+                                        width: Dimensions.get('window').width - 100,
+                                    }}
+                                >
+                                    <Text style={{
+                                        marginBottom: 5
+                                    }}>Tanggal</Text>
+                                    <TouchableOpacity
+                                        onPress={() => {
+                                            setShowDatePickerTanggalPengajuanIzinSakit(true)
+                                        }}
+                                    >
+                                        <TextInput
+                                            style={[styles.input, { color: '#333' }]}
+                                            placeholder="Tanggal"
+                                            editable={false}
+                                            value={`${tanggalPengajuanIzinSakit.getFullYear()}-${parseInt(tanggalPengajuanIzinSakit.getMonth() + 1) < 10 ? `0${parseInt(tanggalPengajuanIzinSakit.getMonth() + 1)}` : parseInt(tanggalPengajuanIzinSakit.getMonth() + 1)}-${parseInt(tanggalPengajuanIzinSakit.getDate()) < 10 ? `0${parseInt(tanggalPengajuanIzinSakit.getDate())}` : parseInt(tanggalPengajuanIzinSakit.getDate())}`}
+                                        />
+                                    </TouchableOpacity>
+                                    <DatePicker
+                                        modal
+                                        mode="date"
+                                        open={showDatePickerTanggalPengajuanIzinSakit}
+                                        date={tanggalPengajuanIzinSakit}
+                                        onConfirm={(date) => {
+                                            setShowDatePickerTanggalPengajuanIzinSakit(false)
+                                            setTanggalPengajuanIzinSakit(date)
+                                        }}
+                                        onCancel={() => {
+                                            setShowDatePickerTanggalPengajuanIzinSakit(false)
+                                        }}
                                     />
                                 </View>
 
