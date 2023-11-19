@@ -6,7 +6,7 @@ export default function ListEmployee({ employee }) {
             disabled={true}
         >
             <View style={styles.card}>
-                <Image source={require('./../assets/images/no-photo.png')} style={styles.image} />
+                <Image source={require('./../assets/images/user.png')} style={styles.image} />
                 <View style={styles.employeeDetailWrapper}>
                     <View>
                         <Text style={styles.employeeFullName}>{employee.full_name}</Text>
@@ -33,11 +33,10 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
     image: {
-        width: '35%',
         aspectRatio: 18 / 18,
         borderRadius: 5,
         marginRight: 8,
-        flex: 1
+        flex: 0.8,
     },
     employeeDetailWrapper: {
         padding: 2,
@@ -80,6 +79,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         fontSize: 11,
         borderRadius: 5,
-        fontWeight: '600'
+        fontWeight: '600',
+        marginTop: 8
     }
 })
