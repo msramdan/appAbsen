@@ -343,7 +343,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                             style={styles.filterButton}
                         >
                             <MaterialCommunityIcons
-                                name="filter-variant"
+                                name="filter-outline"
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={22}
                             />

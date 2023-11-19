@@ -6,6 +6,7 @@ import {
     FlatList,
     StyleSheet,
     TouchableOpacity,
+    TextInput
 } from 'react-native';
 
 import React, { useState, useEffect } from 'react';
@@ -16,11 +17,25 @@ import ListEmployee from '../../components/ListEmployee';
 import Axios from '../../utils/Axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect } from '../../utils/Redirect';
+import { useToast } from "react-native-toast-notifications";
 
 export default function EmployeeScreen({ navigation }) {
 
     const [employees, setEmployees] = useState([]);
     const [loadingPosts, setLoadingPosts] = useState(true);
+
+    /**
+     * Main Utils
+     * 
+     */
+    const toast = useToast();
+
+    /**
+     * Filter State
+     * 
+     */
+    const [filterName, setFilterName] = useState(null)
+    const [isFiltered, setIsFiltered] = useState(false)
 
     useEffect(() => {
         loadDataEmployee();
@@ -31,7 +46,21 @@ export default function EmployeeScreen({ navigation }) {
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        await Axios.get(apiSourceUrl ? apiSourceUrl : '/employees', {
+        let formattedApiSourceUrl = ''
+
+        if (apiSourceUrl && (filterName) && isFiltered) {
+            formattedApiSourceUrl = apiSourceUrl
+                + '&name=' + filterName
+        } else if (apiSourceUrl && !isFiltered) {
+            formattedApiSourceUrl = apiSourceUrl
+        } else if (!apiSourceUrl && (filterName) && isFiltered) {
+            formattedApiSourceUrl = '/employees'
+                + '?name=' + filterName
+        } else {
+            formattedApiSourceUrl = '/employees'
+        }
+
+        Axios.get(formattedApiSourceUrl, {
             headers: {
                 Authorization: 'Bearer ' + token
             }
@@ -49,6 +78,16 @@ export default function EmployeeScreen({ navigation }) {
             });
     };
 
+    const doFilterDate = () => {
+        if (!filterName) {
+            setIsFiltered(false)
+            loadDataEmployee()
+        } else {
+            setIsFiltered(true)
+            loadDataEmployee()
+        }
+    }
+
     return (
         <SafeAreaView>
             <ScrollView style={{ padding: 15 }}>
@@ -60,6 +99,33 @@ export default function EmployeeScreen({ navigation }) {
                     />
                     <Text style={styles.labelText}>EMPLOYEES</Text>
                 </View>
+
+                <View style={styles.filterWrapper}>
+                    <View style={{ flex: 5 }}>
+                        <Text style={{
+                            marginBottom: 5
+                        }}>Nama</Text>
+                        <TextInput
+                            style={[styles.input, { color: '#333' }]}
+                            placeholder="Nama"
+                            value={filterName}
+                            onChangeText={text => setFilterName(text)}
+                        />
+                    </View>
+                    <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
+                        <TouchableOpacity
+                            onPress={doFilterDate}
+                            style={styles.filterButton}
+                        >
+                            <MaterialCommunityIcons
+                                name="filter-outline"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={22}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
                 <View
                     style={styles.employeeListsContainer}
                 >
@@ -126,6 +192,7 @@ const styles = StyleSheet.create({
     labelContainer: {
         marginTop: 5,
         flexDirection: 'row',
+        marginBottom: 14
     },
 
     labelIcon: {
@@ -163,5 +230,28 @@ const styles = StyleSheet.create({
         color: '#0ea5e9',
         fontWeight: '500',
         textAlign: 'center'
-    }
+    },
+    filterWrapper: {
+        flexDirection: 'row',
+        gap: 10
+    },
+    filterButtonWrapper: {
+        justifyContent: 'flex-end'
+    },
+    filterButton: {
+        marginBottom: 10,
+        backgroundColor: '#1f2937',
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 6
+    },
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+        borderRadius: 5,
+    },
 });
