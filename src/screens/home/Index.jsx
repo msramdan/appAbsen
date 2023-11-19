@@ -1471,8 +1471,8 @@ export default function HomeScreen({ navigation }) {
                                         style={styles.buttonSuccessModal}
                                     >
                                         <Text
-                                            style={styles.buttonTextModal}
-                                        >Pengajuan Revisi Absen</Text>
+                                            style={[styles.buttonTextModal]}
+                                        >Kirim Pengajuan</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
