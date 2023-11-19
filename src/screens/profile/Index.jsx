@@ -1,5 +1,5 @@
 
-import { Text, StyleSheet, View, Image, TouchableOpacity, Dimensions } from 'react-native';
+import { Text, StyleSheet, View, Image, TouchableOpacity, Dimensions, ScrollView, RefreshControl } from 'react-native';
 
 import React, { useEffect, useState } from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -15,12 +15,14 @@ export default function Photoscreen({ navigation }) {
     const [workLocation, setWorkLocation] = useState('')
     const [loading, setLoading] = useState(true)
     const focused = useIsFocused()
+    const [refresh, setRefersh] = useState(false)
 
     useEffect(() => {
         loadEmployee()
     }, [focused])
 
     const loadEmployee = async () => {
+        setLoading(true)
         const token = await AsyncStorage.getItem('apiToken')
 
         Axios.get('/auth/employee', {
@@ -50,53 +52,69 @@ export default function Photoscreen({ navigation }) {
     }
 
     return (
-        <View style={styles.page}>
-            {
-                loading ?
-                    <Loading style={styles.loading} />
-                    : <></>
-            }
-            <View style={styles.container}>
-                <Image source={require('../../assets/images/user.png')} style={styles.foto} />
-                <View style={styles.profile}>
-                    <Text style={styles.nama}>{fullName}</Text>
-                    <Text style={styles.desc}>{email}</Text>
-                    <Text style={[styles.desc, { marginTop: 5 }]}>{workLocation}</Text>
-                </View>
-                <TouchableOpacity
-                    style={styles.containerMenu}
-                    onPress={() => {
-                        navigation.navigate('EditProfileScreen')
-                    }}>
-                    <View style={styles.menu}>
-                        <Icon name="edit" size={30} color="#3498db" />
-                        <Text style={styles.text}>Edit profile</Text>
-                    </View>
-                    <Icon name="arrow-right" size={30} color="grey" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={styles.containerMenu}
-                    onPress={() => {
-                        navigation.navigate('ChangePasswordScreen')
-                    }}>
-                    <View style={styles.menu}>
-                        <Icon name="lock" size={30} color="#3498db" />
-                        <Text style={styles.text}>Change Password</Text>
-                    </View>
-                    <Icon name="arrow-right" size={30} color="grey" />
-                </TouchableOpacity>
+        <ScrollView
+            refreshControl={
+                <RefreshControl
+                    refreshing={refresh}
+                    onRefresh={() => {
+                        setRefersh(true)
 
-                <TouchableOpacity
-                    style={styles.containerMenu}
-                    onPress={() => doLogout()}>
-                    <View style={styles.menu}>
-                        <Icon name="sign-out" size={30} color="#3498db" />
-                        <Text style={styles.text}>Sign Out</Text>
+                        loadEmployee()
+
+                        setRefersh(false)
+                    }}
+                />}
+            style={{ flex: 1 }}
+        >
+            <View style={styles.page}>
+                {
+                    loading ?
+                        <Loading style={styles.loading} />
+                        : <></>
+                }
+                <View style={styles.container}>
+                    <Image source={require('../../assets/images/user.png')} style={styles.foto} />
+                    <View style={styles.profile}>
+                        <Text style={styles.nama}>{fullName}</Text>
+                        <Text style={styles.desc}>{email}</Text>
+                        <Text style={[styles.desc, { marginTop: 5 }]}>{workLocation}</Text>
                     </View>
-                    <Icon name="arrow-right" size={30} color="grey" />
-                </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.containerMenu}
+                        onPress={() => {
+                            navigation.navigate('EditProfileScreen')
+                        }}>
+                        <View style={styles.menu}>
+                            <Icon name="edit" size={30} color="#3498db" />
+                            <Text style={styles.text}>Edit profile</Text>
+                        </View>
+                        <Icon name="arrow-right" size={30} color="grey" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.containerMenu}
+                        onPress={() => {
+                            navigation.navigate('ChangePasswordScreen')
+                        }}>
+                        <View style={styles.menu}>
+                            <Icon name="lock" size={30} color="#3498db" />
+                            <Text style={styles.text}>Change Password</Text>
+                        </View>
+                        <Icon name="arrow-right" size={30} color="grey" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.containerMenu}
+                        onPress={() => doLogout()}>
+                        <View style={styles.menu}>
+                            <Icon name="sign-out" size={30} color="#3498db" />
+                            <Text style={styles.text}>Sign Out</Text>
+                        </View>
+                        <Icon name="arrow-right" size={30} color="grey" />
+                    </TouchableOpacity>
+                </View>
             </View>
-        </View>
+        </ScrollView>
+
     );
 }
 
@@ -104,6 +122,8 @@ const styles = StyleSheet.create({
     page: {
         flex: 1,
         backgroundColor: '#3498db',
+        width: Dimensions.get('window').width,
+        height: Dimensions.get('window').height - 50,
     },
     container: {
         position: 'absolute',
