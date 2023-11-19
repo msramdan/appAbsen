@@ -172,7 +172,9 @@ export default function HomeScreen({ navigation }) {
     }, [stateTodayPresence, stateTodayIzinOrSakit])
 
     useEffect(() => {
-        if (stateTodayIzinOrSakit) {
+        if (new Date().getDay() == 6 || new Date().getDay() == 0) {
+            setButtonClockInEnabled(false)
+        } else if (stateTodayIzinOrSakit) {
             if (stateTodayPresence) {
                 setButtonIzinOrSakitEnabled(false)
             } else if (stateTodayIzinOrSakit.status == 'Rejected') {
