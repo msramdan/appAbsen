@@ -1,4 +1,4 @@
-import { FlatList, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { FlatList, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { View } from "react-native";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Loading from "../../../components/Loading";
@@ -7,8 +7,16 @@ import Axios from "../../../utils/Axios";
 import { Redirect } from "../../../utils/Redirect";
 import { useEffect, useState } from "react";
 import { Text } from "react-native";
+import DatePicker from 'react-native-date-picker';
+import { useToast } from "react-native-toast-notifications";
 
 export default function RiwayatAbsensiScreen() {
+
+    /**
+     * Main Utils
+     * 
+     */
+    const toast = useToast();
 
     /**
      * Employees Riwayat Absensi Utils State
@@ -16,6 +24,26 @@ export default function RiwayatAbsensiScreen() {
      */
     const [loadingHistoryPresenceMonthly, setLoadingHistoryPresenceMonthly] = useState(true)
     const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState({})
+
+    /**
+     * Filter Tanggal Awal
+     * 
+     */
+    const [showDatePickerStartDate, setShowDatePickerStartDate] = useState(false)
+    const [filterTanggalStartDate, setFilterTanggalStartDate] = useState(null)
+
+    /**
+     * Filter Tanggal Akhir
+     * 
+     */
+    const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
+    const [filterTanggalEndDate, setFilterTanggalEndDate] = useState(null)
+
+    /**
+     * Filter Button
+     * 
+     */
+    const [isFiltered, setIsFiltered] = useState(false)
 
     useEffect(() => {
         loadArrHistoryPresenceMonthly()
@@ -26,7 +54,23 @@ export default function RiwayatAbsensiScreen() {
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/history-presence-monthly', {
+        let formattedApiSourceUrl = ''
+
+        if (apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
+            formattedApiSourceUrl = apiSourceUrl
+                + '&start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+        } else if ((apiSourceUrl && (!filterTanggalStartDate || !filterTanggalEndDate)) && !isFiltered) {
+            formattedApiSourceUrl = apiSourceUrl
+        } else if (!apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
+            formattedApiSourceUrl = '/attendances/history-presence'
+                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+        } else if ((!apiSourceUrl && (!filterTanggalStartDate || !filterTanggalEndDate)) && !isFiltered) {
+            formattedApiSourceUrl = '/attendances/history-presence'
+        }
+
+        Axios.get(formattedApiSourceUrl, {
             headers: {
                 Authorization: 'Bearer ' + token
             }
@@ -50,6 +94,18 @@ export default function RiwayatAbsensiScreen() {
         })
     }
 
+    const doFilterDate = () => {
+        if (!filterTanggalStartDate || !filterTanggalEndDate) {
+            toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
+                type: 'danger',
+                placement: 'center'
+            })
+        } else {
+            setIsFiltered(true)
+            loadArrHistoryPresenceMonthly()
+        }
+    }
+
     return (
         <ScrollView
             style={{ padding: 15 }}
@@ -65,6 +121,90 @@ export default function RiwayatAbsensiScreen() {
 
                     <Text style={styles.postText}>RIWAYAT ABSENSI</Text>
                 </View>
+
+                <View style={styles.filterWrapper}>
+                    <View style={{ flex: 3 }}>
+                        <Text style={{
+                            marginBottom: 5
+                        }}>Tanggal Awal</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowDatePickerStartDate(true)
+                            }}
+                        >
+                            <TextInput
+                                style={[styles.input, { color: '#333' }]}
+                                placeholder="Tanggal Awal"
+                                editable={false}
+                                value={
+                                    filterTanggalStartDate ?
+                                        `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                                        : null
+                                }
+                            />
+                        </TouchableOpacity>
+                        <DatePicker
+                            modal
+                            mode="date"
+                            open={showDatePickerStartDate}
+                            date={filterTanggalStartDate ? filterTanggalStartDate : new Date()}
+                            onConfirm={(date) => {
+                                setShowDatePickerStartDate(false)
+                                setFilterTanggalStartDate(date)
+                            }}
+                            onCancel={() => {
+                                setShowDatePickerStartDate(false)
+                            }}
+                        />
+                    </View>
+                    <View style={{ flex: 3 }}>
+                        <Text style={{
+                            marginBottom: 5
+                        }}>Tanggal Akhir</Text>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowDatePickerEndDate(true)
+                            }}
+                        >
+                            <TextInput
+                                style={[styles.input, { color: '#333' }]}
+                                placeholder="Tanggal Akhir"
+                                editable={false}
+                                value={
+                                    filterTanggalEndDate ?
+                                        `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+                                        : null
+                                }
+                            />
+                        </TouchableOpacity>
+                        <DatePicker
+                            modal
+                            mode="date"
+                            open={showDatePickerEndDate}
+                            date={filterTanggalEndDate ? filterTanggalEndDate : new Date()}
+                            onConfirm={(date) => {
+                                setShowDatePickerEndDate(false)
+                                setFilterTanggalEndDate(date)
+                            }}
+                            onCancel={() => {
+                                setShowDatePickerEndDate(false)
+                            }}
+                        />
+                    </View>
+                    <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
+                        <TouchableOpacity
+                            onPress={doFilterDate}
+                            style={styles.filterButton}
+                        >
+                            <MaterialCommunityIcons
+                                name="filter-variant"
+                                style={[styles.postIcon, { color: 'white' }]}
+                                size={22}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
                 {
                     loadingHistoryPresenceMonthly ?
                         <Loading /> :
@@ -179,7 +319,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 5,
         fontSize: 12,
         borderRadius: 3
-    }, buttonPreviewFileModal: {
+    },
+    buttonPreviewFileModal: {
         backgroundColor: '#0ea5e9',
         width: 100,
         paddingVertical: 6,
@@ -217,5 +358,27 @@ const styles = StyleSheet.create({
         alignSelf: 'flex-start',
         borderRadius: 3
     },
-
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
+        marginBottom: 10,
+        paddingHorizontal: 10,
+        borderRadius: 5,
+    },
+    filterWrapper: {
+        flexDirection: 'row',
+        gap: 10
+    },
+    filterButtonWrapper: {
+        justifyContent: 'flex-end'
+    },
+    filterButton: {
+        marginBottom: 10,
+        backgroundColor: '#1f2937',
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: 6
+    }
 })
