@@ -392,7 +392,7 @@ export default function HomeScreen({ navigation }) {
         setErrorMessageDoClockOut(null)
         setLoadingDoClockOut(true)
 
-        if (photoClockIn) {
+        if (photoClockOut) {
             if (currentAuthEmployee.use_gps_location == 'Yes') {
                 permissionHandler(() => {
                     setLoadingDoClockOut(false)
