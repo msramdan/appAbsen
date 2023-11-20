@@ -407,7 +407,7 @@ export default function HomeScreen({ navigation }) {
     }
 
     const doClockInWithoutGPSFunc = async () => {
-        axiosDoClockIn(position)
+        axiosDoClockIn(null)
     }
 
     const doClockInUsingGPSFunc = async () => {
