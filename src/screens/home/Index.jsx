@@ -575,6 +575,7 @@ export default function HomeScreen({ navigation }) {
                 'Authorization': 'Bearer ' + token,
             }
         }).then((res) => {
+            console.log(res)
             if (res) {
                 refreshListDataAndStatusData()
 
@@ -593,6 +594,7 @@ export default function HomeScreen({ navigation }) {
                 }, 500);
             }
         }).catch((err) => {
+            console.log(err.response)
             if (err.response.status == 401) {
                 Redirect.toLoginScreen(navigation)
             } else {

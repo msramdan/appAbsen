@@ -1,4 +1,4 @@
-import { Dimensions, FlatList, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { Dimensions, FlatList, RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { View } from "react-native";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Loading from "../../../components/Loading";
@@ -21,6 +21,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
      * 
      */
     const toast = useToast();
+    const [refresh, setRefersh] = useState(false)
 
     /**
      * Employees Riwayat Pengajuan REVISI ABSENSI Utils State
@@ -101,19 +102,26 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
     }
 
     const doFilterDate = () => {
-        if (!filterTanggalStartDate || !filterTanggalEndDate) {
-            toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
-                type: 'danger',
-                placement: 'center'
-            })
-        } else {
-            setIsFiltered(true)
-            loadArrHistoryPengajuanRevisiAbsen()
-        }
+        loadArrHistoryPengajuanRevisiAbsen()
     }
 
     return (
         <ScrollView
+            refreshControl={
+                <RefreshControl
+                    refreshing={refresh}
+                    onRefresh={() => {
+                        setRefersh(true)
+
+                        setFilterTanggalStartDate(null)
+                        setFilterTanggalEndDate(null)
+                        setIsFiltered(false)
+
+                        loadArrHistoryPengajuanRevisiAbsen()
+
+                        setRefersh(false)
+                    }}
+                />}
             style={{ padding: 15 }}
         >
             {/* Modal Detail History Pengajuan Revisi Absen */}
@@ -333,7 +341,17 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                     </View>
                     <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
                         <TouchableOpacity
-                            onPress={doFilterDate}
+                            onPress={() => {
+                                if (!filterTanggalStartDate || !filterTanggalEndDate) {
+                                    toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
+                                        type: 'danger',
+                                        placement: 'center'
+                                    })
+                                } else {
+                                    setIsFiltered(true)
+                                    doFilterDate()
+                                }
+                            }}
                             style={styles.filterButton}
                         >
                             <MaterialCommunityIcons

@@ -1,4 +1,4 @@
-import { Dimensions, FlatList, Linking, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { Dimensions, FlatList, Linking, RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { View } from "react-native";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Loading from "../../../components/Loading";
@@ -21,6 +21,7 @@ export default function RiwayatPengajuanCutiScreen() {
      * 
      */
     const toast = useToast();
+    const [refresh, setRefersh] = useState(false)
 
     /**
      * Employees Riwayat Pengajuan Cuti Utils State
@@ -114,6 +115,17 @@ export default function RiwayatPengajuanCutiScreen() {
 
     return (
         <ScrollView
+            refreshControl={
+                <RefreshControl
+                    refreshing={refresh}
+                    onRefresh={() => {
+                        setRefersh(true)
+
+                        loadArrHistoryPengajuanCuti()
+
+                        setRefersh(false)
+                    }}
+                />}
             style={{ padding: 15 }}
         >
             {/* Modal Detail History Pengajuan Cuti */}

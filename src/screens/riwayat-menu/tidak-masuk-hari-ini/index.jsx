@@ -1,4 +1,4 @@
-import { FlatList, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
+import { FlatList, RefreshControl, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import { View } from "react-native";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Loading from "../../../components/Loading";
@@ -16,6 +16,7 @@ export default function TidakMasukHariIniScreen() {
      */
     const [loadingEmployeesTodayNotPresent, setLoadingEmployeesTodayNotPresent] = useState(true)
     const [employeesTodayNotPreset, setEmployeesTodayNotPreset] = useState({})
+    const [refresh, setRefersh] = useState(false)
 
     useEffect(() => {
         loadEmployeesTodayNotPreset()
@@ -51,6 +52,17 @@ export default function TidakMasukHariIniScreen() {
 
     return (
         <ScrollView
+            refreshControl={
+                <RefreshControl
+                    refreshing={refresh}
+                    onRefresh={() => {
+                        setRefersh(true)
+
+                        loadEmployeesTodayNotPreset()
+
+                        setRefersh(false)
+                    }}
+                />}
             style={{ padding: 15 }}
         >
             {/* List Tidak Masuk Hari Ini */}

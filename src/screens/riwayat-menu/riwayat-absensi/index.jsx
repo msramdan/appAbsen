@@ -1,4 +1,4 @@
-import { FlatList, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
+import { FlatList, RefreshControl, ScrollView, StyleSheet, TextInput, TouchableOpacity } from "react-native";
 import { View } from "react-native";
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Loading from "../../../components/Loading";
@@ -20,6 +20,7 @@ export default function RiwayatAbsensiScreen() {
      * 
      */
     const toast = useToast();
+    const [refresh, setRefersh] = useState(false)
 
     /**
      * Employees Riwayat Absensi Utils State
@@ -111,6 +112,17 @@ export default function RiwayatAbsensiScreen() {
 
     return (
         <ScrollView
+            refreshControl={
+                <RefreshControl
+                    refreshing={refresh}
+                    onRefresh={() => {
+                        setRefersh(true)
+
+                        loadArrHistoryPresenceMonthly()
+
+                        setRefersh(false)
+                    }}
+                />}
             style={{ padding: 15 }}
         >
             {/* List RIWAYAT ABSENSI */}
