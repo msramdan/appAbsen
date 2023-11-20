@@ -100,8 +100,8 @@ export default function TidakMasukHariIniScreen() {
                                                 style={styles.listTableTbody}
                                             >
                                                 <Text style={{ flex: 1 }}>{index + 1}</Text>
-                                                <Text style={{ flex: 5 }}>{item.employee.full_name}</Text>
-                                                <Text style={{ flex: 3 }}>{item.description}</Text>
+                                                <Text style={{ flex: 5 }}>{item.employee_full_name}</Text>
+                                                <Text style={{ flex: 3 }}>{item.description ? item.description : 'Alpha'}</Text>
                                             </View>
                                         )}
                                         keyExtractor={item => item.id}

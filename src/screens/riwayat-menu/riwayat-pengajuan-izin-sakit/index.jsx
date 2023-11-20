@@ -92,6 +92,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                 }
 
                 setArrHistoryPengajuanIzinSakit(res.data.data)
+                console.log(formattedApiSourceUrl)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
@@ -212,7 +213,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                                         style={styles.buttonTextPreviewFileModal}
                                                     >View File</Text>
                                                 </TouchableOpacity>
-                                            </View> : <Text style={{ color: '#333', fontWeight: '500' }}>Tidak ada File Attachment</Text>
+                                            </View> : <Text style={{ color: '#333', fontWeight: '500' }}>No Attachment Files</Text>
                                     }
 
                                     <View>
