@@ -48,7 +48,7 @@ import { PERMISSIONS, checkMultiple } from "react-native-permissions";
 import Axios from '../../utils/Axios';
 import { Redirect } from '../../utils/Redirect';
 import DatePicker from 'react-native-date-picker';
-import 'moment/locale/id';
+
 
 export default function HomeScreen({ navigation }) {
 
@@ -76,7 +76,7 @@ export default function HomeScreen({ navigation }) {
     const [loadingBanners, setLoadingBanners] = useState(true)
 
     /**
-     * Pengajuan Revisi Absen Utils State
+     * Attendance Revisions Utils State
      * 
      */
     const [buttonPengajuanRevisiAbsenEnabled, setButtonPengajuanRevisiAbsenEnabled] = useState(true)
@@ -92,7 +92,7 @@ export default function HomeScreen({ navigation }) {
     const [pengajuanRevisiAbsenReason, setPengajuanRevisiAbsenReason] = useState('')
 
     /**
-     * Pengajuan Cuti Utils State
+     * Leave Request Utils State
      * 
      */
     const [buttonPengajuanCutiEnabled, setButtonPengajuanCutiEnabled] = useState(true)
@@ -129,7 +129,7 @@ export default function HomeScreen({ navigation }) {
     const [fileAttachmentIzinOrSakit, setfileAttachmentIzinOrSakit] = useState(null)
 
     /**
-     * Izin atau Sakit Utils State
+     * Sick or Leave Utils State
      * 
      */
     const [buttonIzinOrSakitEnabled, setButtonIzinOrSakitEnabled] = useState(false)
@@ -314,11 +314,11 @@ export default function HomeScreen({ navigation }) {
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                 {
-                    title: 'Izinkan akses lokasi?',
-                    message: 'Akses lokasi wajib diizinkan, guna diperlukan untuk proses absensi berdasarkan cabang kantor',
-                    buttonNeutral: 'Tanya lagi nanti',
-                    buttonNegative: 'Tolak',
-                    buttonPositive: 'Oke',
+                    title: 'Allow location access?',
+                    message: 'Location access must be permitted, as needed for the attendance process based on office location',
+                    buttonNeutral: 'Ask again later',
+                    buttonNegative: 'Reject',
+                    buttonPositive: 'Accept',
                 },
             );
             if (granted === PermissionsAndroid.RESULTS.GRANTED) {
@@ -327,7 +327,6 @@ export default function HomeScreen({ navigation }) {
                 cb(false, granted)
             }
         } catch (err) {
-            console.warn(err);
         }
     };
 
@@ -414,7 +413,7 @@ export default function HomeScreen({ navigation }) {
     const doClockInUsingGPSFunc = async () => {
         NetInfo.fetch().then(state => {
             if (!state.isConnected) {
-                setErrorMessageDoClockIn('Periksa koneksi internet anda untuk melakukan absensi')
+                setErrorMessageDoClockIn('Check your internet connection to take attendance')
             } else {
                 Geolocation.getCurrentPosition(
                     async (position) => {
@@ -475,7 +474,7 @@ export default function HomeScreen({ navigation }) {
     const doClockOutUsingGPSFunc = async () => {
         NetInfo.fetch().then(state => {
             if (!state.isConnected) {
-                setErrorMessageDoClockOut('Periksa koneksi internet anda untuk melakukan absensi')
+                setErrorMessageDoClockOut('Check your internet connection to take attendance')
             } else {
                 Geolocation.getCurrentPosition(
                     async (position) => {
@@ -575,7 +574,6 @@ export default function HomeScreen({ navigation }) {
                 'Authorization': 'Bearer ' + token,
             }
         }).then((res) => {
-            console.log(res)
             if (res) {
                 refreshListDataAndStatusData()
 
@@ -594,7 +592,6 @@ export default function HomeScreen({ navigation }) {
                 }, 500);
             }
         }).catch((err) => {
-            console.log(err.response)
             if (err.response.status == 401) {
                 Redirect.toLoginScreen(navigation)
             } else {
@@ -767,7 +764,7 @@ export default function HomeScreen({ navigation }) {
                                         <Text
                                             style={styles.buttonTextModal}
                                         >
-                                            Ambil Foto
+                                            Take a Photo
                                         </Text>
                                     </View>
 
@@ -791,7 +788,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
@@ -868,7 +865,7 @@ export default function HomeScreen({ navigation }) {
                                         <Text
                                             style={styles.buttonTextModal}
                                         >
-                                            Ambil Foto
+                                            Take a Photo
                                         </Text>
                                     </View>
 
@@ -920,7 +917,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
@@ -940,7 +937,7 @@ export default function HomeScreen({ navigation }) {
             </Modal>
             {/* End of Modal Clock Out */}
 
-            {/* Modal Izin atau Sakit */}
+            {/* Modal Sick or Leave */}
             <Modal isVisible={showModalIzinAtauSakit}>
                 <View style={styles.modalOuter}>
                     <View>
@@ -954,7 +951,7 @@ export default function HomeScreen({ navigation }) {
 
                             <Text
                                 style={styles.modalTitle}
-                            >Izin atau Sakit</Text>
+                            >Sick or Leave</Text>
 
                             {
                                 errorMessageDoIzinAtauSakit ?
@@ -1011,7 +1008,7 @@ export default function HomeScreen({ navigation }) {
                                 >
                                     <Text style={{
                                         marginBottom: 5
-                                    }}>Tanggal</Text>
+                                    }}>Date</Text>
                                     <TouchableOpacity
                                         onPress={() => {
                                             setShowDatePickerTanggalPengajuanIzinSakit(true)
@@ -1019,7 +1016,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <TextInput
                                             style={[styles.input, { color: '#333' }]}
-                                            placeholder="Tanggal"
+                                            placeholder="Date"
                                             editable={false}
                                             value={`${tanggalPengajuanIzinSakit.getFullYear()}-${parseInt(tanggalPengajuanIzinSakit.getMonth() + 1) < 10 ? `0${parseInt(tanggalPengajuanIzinSakit.getMonth() + 1)}` : parseInt(tanggalPengajuanIzinSakit.getMonth() + 1)}-${parseInt(tanggalPengajuanIzinSakit.getDate()) < 10 ? `0${parseInt(tanggalPengajuanIzinSakit.getDate())}` : parseInt(tanggalPengajuanIzinSakit.getDate())}`}
                                         />
@@ -1104,7 +1101,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
@@ -1114,7 +1111,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Kirim Pengajuan</Text>
+                                        >Send Request</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -1122,9 +1119,9 @@ export default function HomeScreen({ navigation }) {
                     </View>
                 </View>
             </Modal>
-            {/* End of Modal Izin atau Sakit */}
+            {/* End of Modal Sick or Leave */}
 
-            {/* Modal Pengajuan Cuti */}
+            {/* Modal Leave Request */}
             <Modal isVisible={showModalPengajuanCuti}>
                 <View style={styles.modalOuter}>
                     <View>
@@ -1138,7 +1135,7 @@ export default function HomeScreen({ navigation }) {
 
                             <Text
                                 style={styles.modalTitle}
-                            >Pengajuan Cuti</Text>
+                            >Leave Request</Text>
 
                             {
                                 errorMessageDoPengajuanCuti ?
@@ -1165,7 +1162,7 @@ export default function HomeScreen({ navigation }) {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Tanggal Awal</Text>
+                                        }}>Start Date</Text>
                                         <TouchableOpacity
                                             onPress={() => {
                                                 setShowDatePickerStartDate(true)
@@ -1173,7 +1170,7 @@ export default function HomeScreen({ navigation }) {
                                         >
                                             <TextInput
                                                 style={[styles.input, { color: '#333' }]}
-                                                placeholder="Tanggal Awal"
+                                                placeholder="Start Date"
                                                 editable={false}
                                                 value={`${pengajuanCutiStartDate.getFullYear()}-${parseInt(pengajuanCutiStartDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanCutiStartDate.getMonth() + 1)}` : parseInt(pengajuanCutiStartDate.getMonth() + 1)}-${parseInt(pengajuanCutiStartDate.getDate()) < 10 ? `0${parseInt(pengajuanCutiStartDate.getDate())}` : parseInt(pengajuanCutiStartDate.getDate())}`}
                                             />
@@ -1195,7 +1192,7 @@ export default function HomeScreen({ navigation }) {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Tanggal Akhir</Text>
+                                        }}>End Date</Text>
                                         <TouchableOpacity
                                             onPress={() => {
                                                 setShowDatePickerEndDate(true)
@@ -1203,7 +1200,7 @@ export default function HomeScreen({ navigation }) {
                                         >
                                             <TextInput
                                                 style={[styles.input, { color: '#333' }]}
-                                                placeholder="Tanggal Akhir"
+                                                placeholder="End Date"
                                                 editable={false}
                                                 value={`${pengajuanCutiEndDate.getFullYear()}-${parseInt(pengajuanCutiEndDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanCutiEndDate.getMonth() + 1)}` : parseInt(pengajuanCutiEndDate.getMonth() + 1)}-${parseInt(pengajuanCutiEndDate.getDate()) < 10 ? `0${parseInt(pengajuanCutiEndDate.getDate())}` : parseInt(pengajuanCutiEndDate.getDate())}`}
                                             />
@@ -1225,10 +1222,10 @@ export default function HomeScreen({ navigation }) {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Alasan</Text>
+                                        }}>Reason</Text>
                                         <TextInput
                                             style={[styles.input, styles.enabledModalTextarea]}
-                                            placeholder="Alasan"
+                                            placeholder="Reason"
                                             multiline={true}
                                             numberOfLines={3}
                                             value={pengajuanCutiReason}
@@ -1240,7 +1237,7 @@ export default function HomeScreen({ navigation }) {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>File Dokumen</Text>
+                                        }}>File Attachment</Text>
 
                                         {
                                             fileAttachmentPengajuanCuti ?
@@ -1280,7 +1277,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
@@ -1290,7 +1287,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Pengajuan Cuti</Text>
+                                        >Send Request</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -1298,9 +1295,9 @@ export default function HomeScreen({ navigation }) {
                     </View>
                 </View>
             </Modal>
-            {/* End of Modal Pengajuan Cuti */}
+            {/* End of Modal Leave Request */}
 
-            {/* Modal Pengajuan Revisi Absen */}
+            {/* Modal Attendance Revisions */}
             <Modal isVisible={showModalPengajuanRevisiAbsen}>
                 <View style={styles.modalOuter}>
                     <View>
@@ -1313,7 +1310,7 @@ export default function HomeScreen({ navigation }) {
                             }
                             <Text
                                 style={styles.modalTitle}
-                            >Pengajuan Revisi Absen</Text>
+                            >Attendance Revisions</Text>
 
                             {
                                 errorMessageDoPengajuanRevisiAbsen ?
@@ -1340,7 +1337,7 @@ export default function HomeScreen({ navigation }) {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Tanggal</Text>
+                                        }}>Date</Text>
                                         <TouchableOpacity
                                             onPress={() => {
                                                 setShowDatePickerPengajuanRevisiAbsenDate(true)
@@ -1348,7 +1345,7 @@ export default function HomeScreen({ navigation }) {
                                         >
                                             <TextInput
                                                 style={[styles.input, { color: '#333' }]}
-                                                placeholder="Tanggal"
+                                                placeholder="Date"
                                                 editable={false}
                                                 value={`${pengajuanRevisiAbsenDate.getFullYear()}-${parseInt(pengajuanRevisiAbsenDate.getMonth() + 1) < 10 ? `0${parseInt(pengajuanRevisiAbsenDate.getMonth() + 1)}` : parseInt(pengajuanRevisiAbsenDate.getMonth() + 1)}-${parseInt(pengajuanRevisiAbsenDate.getDate()) < 10 ? `0${parseInt(pengajuanRevisiAbsenDate.getDate())}` : parseInt(pengajuanRevisiAbsenDate.getDate())}`}
                                             />
@@ -1432,10 +1429,10 @@ export default function HomeScreen({ navigation }) {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Alasan</Text>
+                                        }}>Reason</Text>
                                         <TextInput
                                             style={[styles.input, styles.enabledModalTextarea]}
-                                            placeholder="Alasan"
+                                            placeholder="Reason"
                                             multiline={true}
                                             numberOfLines={3}
                                             value={pengajuanRevisiAbsenReason}
@@ -1464,7 +1461,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         onPress={() => {
@@ -1474,7 +1471,7 @@ export default function HomeScreen({ navigation }) {
                                     >
                                         <Text
                                             style={[styles.buttonTextModal]}
-                                        >Kirim Pengajuan</Text>
+                                        >Send Request</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -1482,12 +1479,12 @@ export default function HomeScreen({ navigation }) {
                     </View>
                 </View>
             </Modal>
-            {/* End of Modal Pengajuan Revisi Absen */}
+            {/* End of Modal Attendance Revisions */}
 
             {/* Confirm Dialog */}
             <ConfirmDialog
-                title="Akses Lokasi Diperlukan"
-                message="Izinkan aplikasi untuk mengakses lokasi?. Izin ini diperlukan untuk kebutuhan lokasi absensi"
+                title="Location Access Required"
+                message="Allow the app to access location?. This permit is required for attendance location needs"
                 visible={dialogOpenSetting}
                 onTouchOutside={() => setDialogOpenSetting(false)}
                 positiveButton={{
@@ -1508,8 +1505,8 @@ export default function HomeScreen({ navigation }) {
 
             {/* Confirm Dialog */}
             <ConfirmDialog
-                title="Akses Lokasi Diperlukan"
-                message="Izinkan aplikasi untuk mengakses lokasi?. Izin ini diperlukan untuk kebutuhan lokasi absensi"
+                title="Location Access Required"
+                message="Allow the app to access location?. This permit is required for attendance location needs"
                 visible={dialogAskLocation}
                 onTouchOutside={() => setDialogAskLocation(false)}
                 positiveButton={{
@@ -1522,13 +1519,13 @@ export default function HomeScreen({ navigation }) {
                                 if (statusName == 'never_ask_again') {
                                     setDialogOpenSetting(true)
                                 } else {
-                                    toast.show('Tidak bisa melakukan absensi, Harap berikan izin aplikasi untuk mengakses lokasi', {
+                                    toast.show("Can't do attendance, please give the application permission to access the location", {
                                         type: 'danger',
                                         placement: 'center'
                                     })
                                 }
                             } else {
-                                doClockInFunc()
+                                doClockIn()
                             }
                         })
                     }
@@ -1545,7 +1542,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.header}>
                 <View style={styles.headerContainer}>
                     <View style={styles.headerTextContainer}>
-                        <Text style={styles.headerTextColor}>Selamat Datang</Text>
+                        <Text style={styles.headerTextColor}>Welcome</Text>
                         <Text style={styles.headerTextTwoColor}>
                             {currentAuthEmployee.full_name}
                         </Text>
@@ -1629,7 +1626,7 @@ export default function HomeScreen({ navigation }) {
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={30}
                             />
-                            <Text style={styles.buttonMainMenuText}>Izin atau Sakit</Text>
+                            <Text style={styles.buttonMainMenuText}>Sick or Leave</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             disabled={!buttonClockOutEnabled}
@@ -1664,7 +1661,7 @@ export default function HomeScreen({ navigation }) {
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={30}
                             />
-                            <Text style={styles.buttonMainMenuText}>Pengajuan Cuti</Text>
+                            <Text style={styles.buttonMainMenuText}>Leave Request</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={{ gap: 15, marginTop: 15, flexDirection: 'row' }}>
@@ -1683,7 +1680,7 @@ export default function HomeScreen({ navigation }) {
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={30}
                             />
-                            <Text style={styles.buttonMainMenuText}>Pengajuan Revisi Absen</Text>
+                            <Text style={styles.buttonMainMenuText}>Attendance Revisions</Text>
                         </TouchableOpacity>
                         <View style={{ flex: 1 }}></View>
                         <View style={{ flex: 1 }}></View>
@@ -1696,7 +1693,7 @@ export default function HomeScreen({ navigation }) {
                 <View
                     style={styles.productContainer}
                 >
-                    <Text style={[styles.productText, { marginBottom: 10 }]}>RIWAYAT MENU</Text>
+                    <Text style={[styles.productText, { marginBottom: 10 }]}>HISTORY MENU</Text>
                     <View style={{ gap: 15, flexDirection: 'row' }}>
                         <TouchableOpacity
                             onPress={() => {
@@ -1710,7 +1707,7 @@ export default function HomeScreen({ navigation }) {
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={30}
                             />
-                            <Text style={styles.buttonMainMenuText}>Tidak Masuk Hari Ini</Text>
+                            <Text style={styles.buttonMainMenuText}>Employee Didn't Work Today.</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => {
@@ -1724,7 +1721,7 @@ export default function HomeScreen({ navigation }) {
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={30}
                             />
-                            <Text style={styles.buttonMainMenuText}>Riwayat {"\n"} Absensi</Text>
+                            <Text style={styles.buttonMainMenuText}>Presence History</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => {
@@ -1738,7 +1735,7 @@ export default function HomeScreen({ navigation }) {
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={30}
                             />
-                            <Text style={styles.buttonMainMenuText}>Riwayat Pengajuan {"\n"} Izin / Sakit</Text>
+                            <Text style={styles.buttonMainMenuText}>Sick or Leave Request History</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={() => {
@@ -1752,7 +1749,7 @@ export default function HomeScreen({ navigation }) {
                                 style={[styles.postIcon, { color: 'white' }]}
                                 size={30}
                             />
-                            <Text style={styles.buttonMainMenuText}>Riwayat Pengajuan Cuti</Text>
+                            <Text style={styles.buttonMainMenuText}>Leave Request History</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={{ marginTop: 15, gap: 15, flexDirection: 'row' }}
@@ -1771,7 +1768,7 @@ export default function HomeScreen({ navigation }) {
                                     style={[styles.postIcon, { color: 'white' }]}
                                     size={30}
                                 />
-                                <Text style={styles.buttonMainMenuText}>Riwayat Pengajuan Revisi Absensi</Text>
+                                <Text style={styles.buttonMainMenuText}>Attendance Revisions History</Text>
                             </TouchableOpacity>
                         </View>
                         <View style={{ flex: 1 }}></View>
@@ -1789,7 +1786,7 @@ export default function HomeScreen({ navigation }) {
                         size={20}
                     />
 
-                    <Text style={styles.postText}>BERITA TERBARU</Text>
+                    <Text style={styles.postText}>LATEST NEWS</Text>
                 </View>
                 <View style={{ flex: 1, flexDirection: 'row', marginBottom: 250 }}>
                     {loadingNews ? (

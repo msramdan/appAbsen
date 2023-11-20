@@ -12,7 +12,7 @@ import DatePicker from 'react-native-date-picker';
 import { useToast } from "react-native-toast-notifications";
 
 import moment from 'moment';
-import 'moment/locale/id';
+
 
 export default function RiwayatPengajuanRevisiAbsensiScreen() {
 
@@ -24,7 +24,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
     const [refresh, setRefersh] = useState(false)
 
     /**
-     * Employees Riwayat Pengajuan REVISI ABSENSI Utils State
+     * Employees ATTENDANCE REVISIONS HISTORY Utils State
      * 
      */
     const [loadingHistoryPengajuanRevisiAbsen, setLoadingHistoryPengajuanRevisiAbsen] = useState(true)
@@ -33,14 +33,14 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
     const [showModalDetailHistoryPengajuanRevisiAbsen, setShowModalDetailHistoryPengajuanRevisiAbsen] = useState(false)
 
     /**
-     * Filter Tanggal Awal
+     * Filter Start Date
      * 
      */
     const [showDatePickerStartDate, setShowDatePickerStartDate] = useState(false)
     const [filterTanggalStartDate, setFilterTanggalStartDate] = useState(null)
 
     /**
-     * Filter Tanggal Akhir
+     * Filter End Date
      * 
      */
     const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
@@ -124,7 +124,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                 />}
             style={{ padding: 15 }}
         >
-            {/* Modal Detail History Pengajuan Revisi Absen */}
+            {/* Modal Detail Attendance Revisions History */}
             <Modal isVisible={showModalDetailHistoryPengajuanRevisiAbsen}>
                 <View style={styles.modalOuter}>
                     <View>
@@ -133,7 +133,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                         >
                             <Text
                                 style={styles.modalTitle}
-                            >Detail History Pengajuan Revisi Absen</Text>
+                            >Detail Attendance Revisions History</Text>
 
                             <View
                                 style={{ alignItems: 'center' }}
@@ -147,10 +147,10 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Tanggal</Text>
+                                        }}>Date</Text>
                                         <TextInput
                                             style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal"
+                                            placeholder="Date"
                                             editable={false}
                                             value={objDetailHistoryPengajuanRevisiAbsen.date}
                                         />
@@ -248,7 +248,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -256,9 +256,9 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                     </View>
                 </View>
             </Modal>
-            {/* End of Modal Detail History Pengajuan Revisi Absen */}
+            {/* End of Modal Detail Attendance Revisions History */}
 
-            {/* List RIWAYAT PENGAJUAN REVISI ABSENSI */}
+            {/* List ATTENDANCE REVISIONS HISTORY */}
             <View >
                 <View style={[styles.postContainer, { marginBottom: 10 }]}>
                     <MaterialCommunityIcons
@@ -267,14 +267,14 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                         size={20}
                     />
 
-                    <Text style={styles.postText}>RIWAYAT PENGAJUAN REVISI ABSENSI</Text>
+                    <Text style={styles.postText}>ATTENDANCE REVISIONS HISTORY</Text>
                 </View>
 
                 <View style={styles.filterWrapper}>
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Awal</Text>
+                        }}>Start Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerStartDate(true)
@@ -282,7 +282,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Awal"
+                                placeholder="Start Date"
                                 editable={false}
                                 value={
                                     filterTanggalStartDate ?
@@ -308,7 +308,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Akhir</Text>
+                        }}>End Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerEndDate(true)
@@ -316,7 +316,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Akhir"
+                                placeholder="End Date"
                                 editable={false}
                                 value={
                                     filterTanggalEndDate ?
@@ -343,7 +343,7 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                         <TouchableOpacity
                             onPress={() => {
                                 if (!filterTanggalStartDate || !filterTanggalEndDate) {
-                                    toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
+                                    toast.show('For filters, Start Date and End Date are mandatory!', {
                                         type: 'danger',
                                         placement: 'center'
                                     })
@@ -374,9 +374,9 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                                 <View
                                     style={styles.listTableThead}
                                 >
-                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Dibuat Pada</Text>
+                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Created At</Text>
                                     <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
+                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Action</Text>
                                 </View>
                                 {
                                     <FlatList
@@ -443,14 +443,14 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                                                 style={{
                                                     color: 'white'
                                                 }}
-                                            >Tampilkan Lebih Banyak</Text>
+                                            >Show More</Text>
                                         </TouchableOpacity>
                                     </View> : <></>
                             }
                         </>
                 }
             </View>
-            {/* End of List RIWAYAT PENGAJUAN REVISI ABSENSI */}
+            {/* End of List ATTENDANCE REVISIONS HISTORY */}
 
         </ScrollView>
     )

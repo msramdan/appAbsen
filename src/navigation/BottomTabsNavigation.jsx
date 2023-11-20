@@ -89,7 +89,7 @@ export default function BottomTabsNavigation() {
                             />
                             <Text
                                 style={focused ? styles.tabBarTextActive : styles.tabBarText}>
-                                BERITA
+                                NEWS
                             </Text>
                         </View>
                     ),

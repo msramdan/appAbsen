@@ -21,7 +21,7 @@ import RenderHtml from 'react-native-render-html';
 
 //import momen js
 import moment from 'moment';
-import 'moment/locale/id';
+
 
 //import component loading
 import Loading from '../../components/Loading';

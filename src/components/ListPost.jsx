@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 import moment from 'moment';
-import 'moment/locale/id';
+
 
 export default function ListPost({ data }) {
 

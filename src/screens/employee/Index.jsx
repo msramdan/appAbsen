@@ -18,7 +18,6 @@ import ListEmployee from '../../components/ListEmployee';
 import Axios from '../../utils/Axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect } from '../../utils/Redirect';
-import { useToast } from "react-native-toast-notifications";
 
 export default function EmployeeScreen({ navigation }) {
 
@@ -119,10 +118,10 @@ export default function EmployeeScreen({ navigation }) {
                     <View style={{ flex: 5 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Nama</Text>
+                        }}>Name</Text>
                         <TextInput
                             style={[styles.input, { color: '#333' }]}
-                            placeholder="Nama"
+                            placeholder="Name"
                             value={filterName}
                             onChangeText={text => setFilterName(text)}
                         />
@@ -175,7 +174,7 @@ export default function EmployeeScreen({ navigation }) {
                                         >
                                             <Text
                                                 style={styles.prevNextButtonText}
-                                            >Sebelumnya</Text>
+                                            >Previous</Text>
                                         </TouchableOpacity> : <></>
                                 }
                                 {
@@ -190,7 +189,7 @@ export default function EmployeeScreen({ navigation }) {
                                         >
                                             <Text
                                                 style={styles.prevNextButtonText}
-                                            >Selanjutnya</Text>
+                                            >Next</Text>
                                         </TouchableOpacity> : <></>
                                 }
                             </View>

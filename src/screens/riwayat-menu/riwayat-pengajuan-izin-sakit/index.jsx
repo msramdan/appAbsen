@@ -12,7 +12,7 @@ import DatePicker from 'react-native-date-picker';
 import { useToast } from "react-native-toast-notifications";
 
 import moment from 'moment';
-import 'moment/locale/id';
+
 
 export default function RiwayatPengajuanIzinSakitScreen() {
 
@@ -24,7 +24,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
     const [refresh, setRefersh] = useState(false)
 
     /**
-     * Employees Riwayat Pengajuan Izin / Sakit Utils State
+     * Employees SICK OR LEAVE REQUEST HISTORY Utils State
      * 
      */
     const [loadingHistoryPengajuanIzinSakit, setLoadingHistoryPengajuanIzinSakit] = useState(true)
@@ -33,14 +33,14 @@ export default function RiwayatPengajuanIzinSakitScreen() {
     const [showModalDetailHistoryPengajuanIzinSakit, setShowModalDetailHistoryPengajuanIzinSakit] = useState(false)
 
     /**
-     * Filter Tanggal Awal
+     * Filter Start Date
      * 
      */
     const [showDatePickerStartDate, setShowDatePickerStartDate] = useState(false)
     const [filterTanggalStartDate, setFilterTanggalStartDate] = useState(null)
 
     /**
-     * Filter Tanggal Akhir
+     * Filter End Date
      * 
      */
     const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
@@ -104,7 +104,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
 
     const doFilterDate = () => {
         if (!filterTanggalStartDate || !filterTanggalEndDate) {
-            toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
+            toast.show('For filter, Start Date and End Date are required!', {
                 type: 'danger',
                 placement: 'center'
             })
@@ -138,7 +138,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                         >
                             <Text
                                 style={styles.modalTitle}
-                            >Detail History Pengajuan Izin / Sakit</Text>
+                            >Detail Sick or Leave Request History</Text>
 
                             <View
                                 style={{ alignItems: 'center' }}
@@ -152,10 +152,10 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Tanggal</Text>
+                                        }}>Date</Text>
                                         <TextInput
                                             style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal"
+                                            placeholder="Date"
                                             editable={false}
                                             value={objDetailHistoryPengajuanIzinSakit.date}
                                         />
@@ -166,7 +166,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                     }}>Description</Text>
                                     <TextInput
                                         style={[styles.input, styles.disabledTextInput]}
-                                        placeholder="Tanggal Awal"
+                                        placeholder="Description"
                                         editable={false}
                                         value={objDetailHistoryPengajuanIzinSakit.description}
                                     />
@@ -198,7 +198,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                 >
                                     <Text style={{
                                         marginBottom: 5
-                                    }}>File Dokumen</Text>
+                                    }}>File Attachment</Text>
                                     {
                                         objDetailHistoryPengajuanIzinSakit.file_attachment ?
                                             <View>
@@ -210,9 +210,9 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                                 >
                                                     <Text
                                                         style={styles.buttonTextPreviewFileModal}
-                                                    >Lihat File</Text>
+                                                    >View File</Text>
                                                 </TouchableOpacity>
-                                            </View> : <Text style={{ color: '#333', fontWeight: '500' }}>Tidak ada file dokumen</Text>
+                                            </View> : <Text style={{ color: '#333', fontWeight: '500' }}>Tidak ada File Attachment</Text>
                                     }
 
                                     <View>
@@ -258,7 +258,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -268,7 +268,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
             </Modal>
             {/* End of Modal Detail History Pengajuan Izin / Sakit */}
 
-            {/* List RIWAYAT PENGAJUAN IZIN / SAKIT */}
+            {/* List SICK OR LEAVE REQUEST HISTORY */}
             <View >
                 <View style={[styles.postContainer, { marginBottom: 10 }]}>
                     <MaterialCommunityIcons
@@ -277,14 +277,14 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                         size={20}
                     />
 
-                    <Text style={styles.postText}>RIWAYAT PENGAJUAN IZIN / SAKIT</Text>
+                    <Text style={styles.postText}>SICK OR LEAVE REQUEST HISTORY</Text>
                 </View>
 
                 <View style={styles.filterWrapper}>
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Awal</Text>
+                        }}>Start Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerStartDate(true)
@@ -292,7 +292,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Awal"
+                                placeholder="Start Date"
                                 editable={false}
                                 value={
                                     filterTanggalStartDate ?
@@ -318,7 +318,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Akhir</Text>
+                        }}>End Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerEndDate(true)
@@ -326,7 +326,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Akhir"
+                                placeholder="End Date"
                                 editable={false}
                                 value={
                                     filterTanggalEndDate ?
@@ -374,10 +374,10 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                 <View
                                     style={styles.listTableThead}
                                 >
-                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Dibuat Pada</Text>
+                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Created At</Text>
                                     <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Desc</Text>
                                     <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Aksi</Text>
+                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Action</Text>
                                 </View>
                                 {
                                     <FlatList
@@ -440,7 +440,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                                 style={{
                                                     color: 'white'
                                                 }}
-                                            >Tampilkan Lebih Banyak</Text>
+                                            >Show More</Text>
                                         </TouchableOpacity>
                                     </View> : <></>
                             }
@@ -448,7 +448,7 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                         </>
                 }
             </View>
-            {/* End of List RIWAYAT PENGAJUAN IZIN / SAKIT */}
+            {/* End of List SICK OR LEAVE REQUEST HISTORY */}
 
         </ScrollView>
     )

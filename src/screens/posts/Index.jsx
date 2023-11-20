@@ -14,9 +14,6 @@ import React, { useState, useEffect } from 'react';
 //import material icons
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-//import api services
-import Api from '../../services/Api';
-
 //import component loading
 import Loading from '../../components/Loading';
 
@@ -89,7 +86,7 @@ export default function PostsIndexScreen() {
                         style={styles.labelIcon}
                         size={20}
                     />
-                    <Text style={styles.labelText}>BERITA</Text>
+                    <Text style={styles.labelText}>NEWS</Text>
                 </View>
 
                 <View
@@ -127,7 +124,7 @@ export default function PostsIndexScreen() {
                                                 >
                                                     <Text
                                                         style={styles.prevNextButtonText}
-                                                    >Sebelumnya</Text>
+                                                    >Previous</Text>
                                                 </TouchableOpacity> : <></>
                                         }
                                         {
@@ -142,7 +139,7 @@ export default function PostsIndexScreen() {
                                                 >
                                                     <Text
                                                         style={styles.prevNextButtonText}
-                                                    >Selanjutnya</Text>
+                                                    >Next</Text>
                                                 </TouchableOpacity> : <></>
                                         }
                                     </View>

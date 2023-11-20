@@ -74,7 +74,7 @@ export default function TidakMasukHariIniScreen() {
                         size={20}
                     />
 
-                    <Text style={styles.postText}>TIDAK MASUK HARI INI</Text>
+                    <Text style={styles.postText}>EMPLOYEE DIDN'T WORK TODAY</Text>
                 </View>
                 {
                     loadingEmployeesTodayNotPresent ?
@@ -88,8 +88,8 @@ export default function TidakMasukHariIniScreen() {
                                     style={styles.listTableThead}
                                 >
                                     <Text style={[{ flex: 1 }, styles.listTableTheadTD]}>No</Text>
-                                    <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Nama</Text>
-                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Deskripsi</Text>
+                                    <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Name</Text>
+                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Description</Text>
                                 </View>
                                 {
                                     <FlatList
@@ -131,7 +131,7 @@ export default function TidakMasukHariIniScreen() {
                                                 style={{
                                                     color: 'white'
                                                 }}
-                                            >Tampilkan Lebih Banyak</Text>
+                                            >Show More</Text>
                                         </TouchableOpacity>
                                     </View> : <></>
                             }

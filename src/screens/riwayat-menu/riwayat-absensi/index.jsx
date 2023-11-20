@@ -11,7 +11,7 @@ import DatePicker from 'react-native-date-picker';
 import { useToast } from "react-native-toast-notifications";
 
 import moment from 'moment';
-import 'moment/locale/id';
+
 
 export default function RiwayatAbsensiScreen() {
 
@@ -23,21 +23,21 @@ export default function RiwayatAbsensiScreen() {
     const [refresh, setRefersh] = useState(false)
 
     /**
-     * Employees Riwayat Absensi Utils State
+     * Employees PRESENCE HISTORY Utils State
      * 
      */
     const [loadingHistoryPresenceMonthly, setLoadingHistoryPresenceMonthly] = useState(true)
     const [arrHistoryPresenceMonthly, setArrHistoryPresenceMonthly] = useState({})
 
     /**
-     * Filter Tanggal Awal
+     * Filter Start Date
      * 
      */
     const [showDatePickerStartDate, setShowDatePickerStartDate] = useState(false)
     const [filterTanggalStartDate, setFilterTanggalStartDate] = useState(null)
 
     /**
-     * Filter Tanggal Akhir
+     * Filter End Date
      * 
      */
     const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
@@ -100,7 +100,7 @@ export default function RiwayatAbsensiScreen() {
 
     const doFilterDate = () => {
         if (!filterTanggalStartDate || !filterTanggalEndDate) {
-            toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
+            toast.show('For filters, Start Date and End Date are mandatory!', {
                 type: 'danger',
                 placement: 'center'
             })
@@ -125,7 +125,7 @@ export default function RiwayatAbsensiScreen() {
                 />}
             style={{ padding: 15 }}
         >
-            {/* List RIWAYAT ABSENSI */}
+            {/* List PRESENCE HISTORY */}
             <View >
                 <View style={[styles.postContainer, { marginBottom: 10 }]}>
                     <MaterialCommunityIcons
@@ -134,14 +134,14 @@ export default function RiwayatAbsensiScreen() {
                         size={20}
                     />
 
-                    <Text style={styles.postText}>RIWAYAT ABSENSI</Text>
+                    <Text style={styles.postText}>PRESENCE HISTORY</Text>
                 </View>
 
                 <View style={styles.filterWrapper}>
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Awal</Text>
+                        }}>Start Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerStartDate(true)
@@ -149,7 +149,7 @@ export default function RiwayatAbsensiScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Awal"
+                                placeholder="Start Date"
                                 editable={false}
                                 value={
                                     filterTanggalStartDate ?
@@ -175,7 +175,7 @@ export default function RiwayatAbsensiScreen() {
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Akhir</Text>
+                        }}>End Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerEndDate(true)
@@ -183,7 +183,7 @@ export default function RiwayatAbsensiScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Akhir"
+                                placeholder="End Date"
                                 editable={false}
                                 value={
                                     filterTanggalEndDate ?
@@ -231,9 +231,9 @@ export default function RiwayatAbsensiScreen() {
                                 <View
                                     style={styles.listTableThead}
                                 >
-                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Tanggal</Text>
+                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Date</Text>
                                     <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Deskripsi</Text>
+                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Description</Text>
                                 </View>
                                 {
                                     <FlatList
@@ -246,7 +246,7 @@ export default function RiwayatAbsensiScreen() {
                                                 <Text style={{ flex: 3 }}>{moment(item.created_at, 'DD/MM/YYYY HH:ii').format('Y-MM-DD')}</Text>
                                                 <View style={{ flex: 5 }}>
                                                     <Text style={[styles.tableDataLabelStatus, { flex: 6, backgroundColor: `${item.is_present == 'Yes' ? '#22c55e' : '#ef4444'}` }]}>{
-                                                        item.is_present == 'Yes' ? 'Berangkat' : 'Tidak Berangkat'
+                                                        item.is_present == 'Yes' ? 'Presence' : 'Not Presence'
                                                     }</Text>
                                                 </View>
                                                 <Text style={{ flex: 4 }}>{item.description}</Text>
@@ -272,7 +272,7 @@ export default function RiwayatAbsensiScreen() {
                                                 style={{
                                                     color: 'white'
                                                 }}
-                                            >Tampilkan Lebih Banyak</Text>
+                                            >Show More</Text>
                                         </TouchableOpacity>
                                     </View> : <></>
                             }
@@ -280,7 +280,7 @@ export default function RiwayatAbsensiScreen() {
                         </>
                 }
             </View>
-            {/* End of List RIWAYAT ABSENSI */}
+            {/* End of List PRESENCE HISTORY */}
         </ScrollView>
     )
 }

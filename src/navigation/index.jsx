@@ -66,17 +66,17 @@ export default function Navigation() {
                 <Stack.Screen
                     name="TidakMasukHariIniScreen"
                     component={TidakMasukHariIniScreen}
-                    options={{ title: 'Tidak Masuk Hari Ini' }}
+                    options={{ title: "Employee Didn't Work Today" }}
                 />
                 <Stack.Screen
                     name="RiwayatAbsensiScreen"
                     component={RiwayatAbsensiScreen}
-                    options={{ title: 'Riwayat Absensi' }}
+                    options={{ title: 'Presence History' }}
                 />
                 <Stack.Screen
                     name="RiwayatPengajuanIzinSakitScreen"
                     component={RiwayatPengajuanIzinSakitScreen}
-                    options={{ title: 'Riwayat Pengajuan Izin Sakit' }}
+                    options={{ title: 'Sick or Leave Request History' }}
                 />
                 <Stack.Screen
                     name="RiwayatPengajuanCutiScreen"

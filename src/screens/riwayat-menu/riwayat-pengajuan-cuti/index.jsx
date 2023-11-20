@@ -12,7 +12,7 @@ import DatePicker from 'react-native-date-picker';
 import { useToast } from "react-native-toast-notifications";
 
 import moment from 'moment';
-import 'moment/locale/id';
+
 
 export default function RiwayatPengajuanCutiScreen() {
 
@@ -24,7 +24,7 @@ export default function RiwayatPengajuanCutiScreen() {
     const [refresh, setRefersh] = useState(false)
 
     /**
-     * Employees Riwayat Pengajuan Cuti Utils State
+     * Employees LEAVE REQUEST HISTORY Utils State
      * 
      */
     const [loadingHistoryPengajuanCuti, setLoadingHistoryPengajuanCuti] = useState(true)
@@ -33,14 +33,14 @@ export default function RiwayatPengajuanCutiScreen() {
     const [showModalDetailHistoryPengajuanCuti, setShowModalDetailHistoryPengajuanCuti] = useState(false)
 
     /**
-     * Filter Tanggal Awal
+     * Filter Start Date
      * 
      */
     const [showDatePickerStartDate, setShowDatePickerStartDate] = useState(false)
     const [filterTanggalStartDate, setFilterTanggalStartDate] = useState(null)
 
     /**
-     * Filter Tanggal Akhir
+     * Filter End Date
      * 
      */
     const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
@@ -103,7 +103,7 @@ export default function RiwayatPengajuanCutiScreen() {
 
     const doFilterDate = () => {
         if (!filterTanggalStartDate || !filterTanggalEndDate) {
-            toast.show('Untuk filter, Tanggal Awal dan Tanggal Akhir wajib diisi!', {
+            toast.show('For filters, Start Date and End Date are mandatory!', {
                 type: 'danger',
                 placement: 'center'
             })
@@ -128,7 +128,7 @@ export default function RiwayatPengajuanCutiScreen() {
                 />}
             style={{ padding: 15 }}
         >
-            {/* Modal Detail History Pengajuan Cuti */}
+            {/* Modal Leave Request History Detail */}
             <Modal isVisible={showModalDetailHistoryPengajuanCuti}>
                 <View style={styles.modalOuter}>
                     <View>
@@ -137,7 +137,7 @@ export default function RiwayatPengajuanCutiScreen() {
                         >
                             <Text
                                 style={styles.modalTitle}
-                            >Detail History Pengajuan Cuti</Text>
+                            >Leave Request History Detail</Text>
 
                             <View
                                 style={{ alignItems: 'center' }}
@@ -150,10 +150,10 @@ export default function RiwayatPengajuanCutiScreen() {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Tanggal Awal</Text>
+                                        }}>Start Date</Text>
                                         <TextInput
                                             style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal Awal"
+                                            placeholder="Start Date"
                                             editable={false}
                                             value={objDetailHistoryPengajuanCuti.start_date}
                                         />
@@ -161,10 +161,10 @@ export default function RiwayatPengajuanCutiScreen() {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Tanggal Akhir</Text>
+                                        }}>End Date</Text>
                                         <TextInput
                                             style={[styles.input, styles.disabledTextInput]}
-                                            placeholder="Tanggal Akhir"
+                                            placeholder="End Date"
                                             editable={false}
                                             value={objDetailHistoryPengajuanCuti.end_date}
                                         />
@@ -172,10 +172,10 @@ export default function RiwayatPengajuanCutiScreen() {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>Alasan</Text>
+                                        }}>Reason</Text>
                                         <TextInput
                                             style={[styles.input, styles.disabledTextArea]}
-                                            placeholder="Alasan"
+                                            placeholder="Reason"
                                             editable={false}
                                             multiline={true}
                                             numberOfLines={3}
@@ -185,7 +185,7 @@ export default function RiwayatPengajuanCutiScreen() {
                                     <View>
                                         <Text style={{
                                             marginBottom: 5
-                                        }}>File Dokumen</Text>
+                                        }}>File Attachment</Text>
 
                                         <TouchableOpacity
                                             onPress={() => {
@@ -205,7 +205,7 @@ export default function RiwayatPengajuanCutiScreen() {
                                                     fontWeight: '500',
                                                     color: '#FFF'
                                                 }}
-                                            >Lihat File</Text>
+                                            >View File</Text>
                                         </TouchableOpacity>
                                     </View>
                                     <View>
@@ -251,7 +251,7 @@ export default function RiwayatPengajuanCutiScreen() {
                                     >
                                         <Text
                                             style={styles.buttonTextModal}
-                                        >Tutup</Text>
+                                        >Close</Text>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -259,9 +259,9 @@ export default function RiwayatPengajuanCutiScreen() {
                     </View>
                 </View>
             </Modal>
-            {/* End of Modal Detail History Pengajuan Cuti */}
+            {/* End of Modal Leave Request History Detail */}
 
-            {/* List RIWAYAT PENGAJUAN CUTI */}
+            {/* List LEAVE REQUEST HISTORY */}
             <View >
                 <View style={[styles.postContainer, { marginBottom: 10 }]}>
                     <MaterialCommunityIcons
@@ -270,14 +270,14 @@ export default function RiwayatPengajuanCutiScreen() {
                         size={20}
                     />
 
-                    <Text style={styles.postText}>RIWAYAT PENGAJUAN CUTI</Text>
+                    <Text style={styles.postText}>LEAVE REQUEST HISTORY</Text>
                 </View>
 
                 <View style={styles.filterWrapper}>
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Awal</Text>
+                        }}>Start Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerStartDate(true)
@@ -285,7 +285,7 @@ export default function RiwayatPengajuanCutiScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Awal"
+                                placeholder="Start Date"
                                 editable={false}
                                 value={
                                     filterTanggalStartDate ?
@@ -311,7 +311,7 @@ export default function RiwayatPengajuanCutiScreen() {
                     <View style={{ flex: 3 }}>
                         <Text style={{
                             marginBottom: 5
-                        }}>Tanggal Akhir</Text>
+                        }}>End Date</Text>
                         <TouchableOpacity
                             onPress={() => {
                                 setShowDatePickerEndDate(true)
@@ -319,7 +319,7 @@ export default function RiwayatPengajuanCutiScreen() {
                         >
                             <TextInput
                                 style={[styles.input, { color: '#333' }]}
-                                placeholder="Tanggal Akhir"
+                                placeholder="End Date"
                                 editable={false}
                                 value={
                                     filterTanggalEndDate ?
@@ -367,9 +367,9 @@ export default function RiwayatPengajuanCutiScreen() {
                                 <View
                                     style={styles.listTableThead}
                                 >
-                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Dibuat Pada</Text>
+                                    <Text style={[{ flex: 4 }, styles.listTableTheadTD]}>Created At</Text>
                                     <Text style={[{ flex: 5 }, styles.listTableTheadTD]}>Status</Text>
-                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Aksi</Text>
+                                    <Text style={[{ flex: 3 }, styles.listTableTheadTD]}>Action</Text>
                                 </View>
                                 {
                                     <FlatList
@@ -431,14 +431,14 @@ export default function RiwayatPengajuanCutiScreen() {
                                                 style={{
                                                     color: 'white'
                                                 }}
-                                            >Tampilkan Lebih Banyak</Text>
+                                            >Show More</Text>
                                         </TouchableOpacity>
                                     </View> : <></>
                             }
                         </>
                 }
             </View>
-            {/* End of List RIWAYAT PENGAJUAN CUTI */}
+            {/* End of List LEAVE REQUEST HISTORY */}
 
         </ScrollView>
     )
