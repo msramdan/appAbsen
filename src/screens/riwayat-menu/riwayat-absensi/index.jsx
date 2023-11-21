@@ -19,7 +19,6 @@ export default function RiwayatAbsensiScreen() {
      * Main Utils
      * 
      */
-    const toast = useToast();
     const [refresh, setRefersh] = useState(false)
 
     /**
@@ -43,44 +42,32 @@ export default function RiwayatAbsensiScreen() {
     const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
     const [filterTanggalEndDate, setFilterTanggalEndDate] = useState(null)
 
-    /**
-     * Filter Button
-     * 
-     */
-    const [isFiltered, setIsFiltered] = useState(false)
-
     useEffect(() => {
         loadArrHistoryPresenceMonthly()
     }, [])
 
-    const loadArrHistoryPresenceMonthly = async (apiSourceUrl = null) => {
+    useEffect(() => {
+        if (filterTanggalStartDate && filterTanggalEndDate) {
+            const formattedApiSourceUrl = '/attendances/history-presence'
+                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+
+            loadArrHistoryPresenceMonthly(formattedApiSourceUrl, true)
+        }
+    }, [filterTanggalStartDate, filterTanggalEndDate])
+
+    const loadArrHistoryPresenceMonthly = async (apiSourceUrl = null, isFilter = false) => {
         setLoadingHistoryPresenceMonthly(true)
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        let formattedApiSourceUrl = ''
-
-        if (apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-                + '&start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
-                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
-        } else if (apiSourceUrl && !isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-        } else if (!apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
-            formattedApiSourceUrl = '/attendances/history-presence'
-                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
-                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
-        } else {
-            formattedApiSourceUrl = '/attendances/history-presence'
-        }
-
-        Axios.get(formattedApiSourceUrl, {
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/history-presence', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
             if (res) {
-                if (arrHistoryPresenceMonthly.data && apiSourceUrl) {
+                if (arrHistoryPresenceMonthly.data && apiSourceUrl && !isFilter) {
                     const dataHistoryPresenceMonthlyAppended = [...arrHistoryPresenceMonthly.data]
 
                     dataHistoryPresenceMonthlyAppended.push.apply(dataHistoryPresenceMonthlyAppended, res.data.data.data)
@@ -96,18 +83,6 @@ export default function RiwayatAbsensiScreen() {
         }).finally(() => {
             setLoadingHistoryPresenceMonthly(false)
         })
-    }
-
-    const doFilterDate = () => {
-        if (!filterTanggalStartDate || !filterTanggalEndDate) {
-            toast.show('For filters, Start Date and End Date are mandatory!', {
-                type: 'danger',
-                placement: 'center'
-            })
-        } else {
-            setIsFiltered(true)
-            loadArrHistoryPresenceMonthly()
-        }
     }
 
     return (
@@ -205,18 +180,6 @@ export default function RiwayatAbsensiScreen() {
                                 setShowDatePickerEndDate(false)
                             }}
                         />
-                    </View>
-                    <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
-                        <TouchableOpacity
-                            onPress={doFilterDate}
-                            style={styles.filterButton}
-                        >
-                            <MaterialCommunityIcons
-                                name="filter-outline"
-                                style={[styles.postIcon, { color: 'white' }]}
-                                size={22}
-                            />
-                        </TouchableOpacity>
                     </View>
                 </View>
 

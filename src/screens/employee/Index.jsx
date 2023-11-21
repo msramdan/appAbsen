@@ -35,34 +35,17 @@ export default function EmployeeScreen({ navigation }) {
      * 
      */
     const [filterName, setFilterName] = useState(null)
-    const [isFiltered, setIsFiltered] = useState(false)
 
     useEffect(() => {
         loadDataEmployee();
     }, []);
 
-    const loadDataEmployee = async (apiSourceUrl = null) => {
+    const loadDataEmployee = async (apiSourceUrl = null, isFilter = false) => {
         setLoadingPosts(true);
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        let formattedApiSourceUrl = ''
-
-        if (apiSourceUrl == 'reload') {
-            formattedApiSourceUrl = '/employees'
-        } else if (apiSourceUrl && (filterName) && isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-                + '&name=' + filterName
-        } else if (apiSourceUrl && !isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-        } else if (!apiSourceUrl && (filterName) && isFiltered) {
-            formattedApiSourceUrl = '/employees'
-                + '?name=' + filterName
-        } else {
-            formattedApiSourceUrl = '/employees'
-        }
-
-        Axios.get(formattedApiSourceUrl, {
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/employees', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
@@ -84,8 +67,10 @@ export default function EmployeeScreen({ navigation }) {
         if (!filterName) {
             loadDataEmployee('reload')
         } else {
-            setIsFiltered(true)
-            loadDataEmployee()
+            const formattedApiSourceUrl = '/employees'
+                + '?name=' + `${filterName}`
+
+            loadDataEmployee(formattedApiSourceUrl, true)
         }
     }
 

@@ -46,45 +46,33 @@ export default function RiwayatPengajuanIzinSakitScreen() {
     const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
     const [filterTanggalEndDate, setFilterTanggalEndDate] = useState(null)
 
-    /**
-     * Filter Button
-     * 
-     */
-    const [isFiltered, setIsFiltered] = useState(false)
-
     useEffect(() => {
         loadArrHistoryPengajuanIzinSakit()
     }, [])
 
-    const loadArrHistoryPengajuanIzinSakit = async (apiSourceUrl = null) => {
+    useEffect(() => {
+        if (filterTanggalStartDate && filterTanggalEndDate) {
+            const formattedApiSourceUrl = '/attendances/current-employee-pengajuan-izin-sakit'
+                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+
+            loadArrHistoryPengajuanIzinSakit(formattedApiSourceUrl, true)
+        }
+    }, [filterTanggalStartDate, filterTanggalEndDate])
+
+    const loadArrHistoryPengajuanIzinSakit = async (apiSourceUrl = null, isFilter = false) => {
         setLoadingHistoryPengajuanIzinSakit(true)
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        let formattedApiSourceUrl = ''
-
-        if (apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-                + '&start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
-                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
-        } else if (apiSourceUrl && !isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-        } else if (!apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
-            formattedApiSourceUrl = '/attendances/current-employee-pengajuan-izin-sakit'
-                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
-                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
-        } else {
-            formattedApiSourceUrl = '/attendances/current-employee-pengajuan-izin-sakit'
-        }
-
-        Axios.get(formattedApiSourceUrl, {
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-izin-sakit', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
             if (res) {
 
-                if (arrHistoryPengajuanIzinSakit.data && apiSourceUrl) {
+                if (arrHistoryPengajuanIzinSakit.data && apiSourceUrl && !isFilter) {
                     const dataHistoryPengajuanIzinSakitAppended = [...arrHistoryPengajuanIzinSakit.data]
 
                     dataHistoryPengajuanIzinSakitAppended.push.apply(dataHistoryPengajuanIzinSakitAppended, res.data.data.data)
@@ -92,7 +80,6 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                 }
 
                 setArrHistoryPengajuanIzinSakit(res.data.data)
-                console.log(formattedApiSourceUrl)
             }
         }).catch((err) => {
             if (err.response.status == 401) {
@@ -101,18 +88,6 @@ export default function RiwayatPengajuanIzinSakitScreen() {
         }).finally(() => {
             setLoadingHistoryPengajuanIzinSakit(false)
         })
-    }
-
-    const doFilterDate = () => {
-        if (!filterTanggalStartDate || !filterTanggalEndDate) {
-            toast.show('For filter, Start Date and End Date are required!', {
-                type: 'danger',
-                placement: 'center'
-            })
-        } else {
-            setIsFiltered(true)
-            loadArrHistoryPengajuanIzinSakit()
-        }
     }
 
     return (
@@ -349,18 +324,6 @@ export default function RiwayatPengajuanIzinSakitScreen() {
                                 setShowDatePickerEndDate(false)
                             }}
                         />
-                    </View>
-                    <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
-                        <TouchableOpacity
-                            onPress={doFilterDate}
-                            style={styles.filterButton}
-                        >
-                            <MaterialCommunityIcons
-                                name="filter-outline"
-                                style={[styles.postIcon, { color: 'white' }]}
-                                size={22}
-                            />
-                        </TouchableOpacity>
                     </View>
                 </View>
 

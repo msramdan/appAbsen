@@ -46,44 +46,32 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
     const [showDatePickerEndDate, setShowDatePickerEndDate] = useState(false)
     const [filterTanggalEndDate, setFilterTanggalEndDate] = useState(null)
 
-    /**
-     * Filter Button
-     * 
-     */
-    const [isFiltered, setIsFiltered] = useState(false)
-
     useEffect(() => {
         loadArrHistoryPengajuanRevisiAbsen()
     }, [])
 
-    const loadArrHistoryPengajuanRevisiAbsen = async (apiSourceUrl = null) => {
+    useEffect(() => {
+        if (filterTanggalStartDate && filterTanggalEndDate) {
+            const formattedApiSourceUrl = '/attendances/current-employee-pengajuan-revisi-absen'
+                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
+
+            loadArrHistoryPengajuanRevisiAbsen(formattedApiSourceUrl, true)
+        }
+    }, [filterTanggalStartDate, filterTanggalEndDate])
+
+    const loadArrHistoryPengajuanRevisiAbsen = async (apiSourceUrl = null, isFilter = false) => {
         setLoadingHistoryPengajuanRevisiAbsen(true)
 
         const token = await AsyncStorage.getItem('apiToken')
 
-        let formattedApiSourceUrl = ''
-
-        if (apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-                + '&start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
-                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
-        } else if (apiSourceUrl && !isFiltered) {
-            formattedApiSourceUrl = apiSourceUrl
-        } else if (!apiSourceUrl && (filterTanggalStartDate && filterTanggalEndDate) && isFiltered) {
-            formattedApiSourceUrl = '/attendances/current-employee-pengajuan-revisi-absen'
-                + '?start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
-                + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
-        } else {
-            formattedApiSourceUrl = '/attendances/current-employee-pengajuan-revisi-absen'
-        }
-
-        Axios.get(formattedApiSourceUrl, {
+        Axios.get(apiSourceUrl ? apiSourceUrl : '/attendances/current-employee-pengajuan-revisi-absen', {
             headers: {
                 Authorization: 'Bearer ' + token
             }
         }).then((res) => {
             if (res) {
-                if (arrHistoryPengajuanRevisiAbsen.data && apiSourceUrl) {
+                if (arrHistoryPengajuanRevisiAbsen.data && apiSourceUrl && !isFilter) {
                     const dataHistoryPengajuanRevisiAbsenAppended = [...arrHistoryPengajuanRevisiAbsen.data]
 
                     dataHistoryPengajuanRevisiAbsenAppended.push.apply(dataHistoryPengajuanRevisiAbsenAppended, res.data.data.data)
@@ -99,10 +87,6 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
         }).finally(() => {
             setLoadingHistoryPengajuanRevisiAbsen(false)
         })
-    }
-
-    const doFilterDate = () => {
-        loadArrHistoryPengajuanRevisiAbsen()
     }
 
     return (
@@ -338,28 +322,6 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                                 setShowDatePickerEndDate(false)
                             }}
                         />
-                    </View>
-                    <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                if (!filterTanggalStartDate || !filterTanggalEndDate) {
-                                    toast.show('For filters, Start Date and End Date are mandatory!', {
-                                        type: 'danger',
-                                        placement: 'center'
-                                    })
-                                } else {
-                                    setIsFiltered(true)
-                                    doFilterDate()
-                                }
-                            }}
-                            style={styles.filterButton}
-                        >
-                            <MaterialCommunityIcons
-                                name="filter-outline"
-                                style={[styles.postIcon, { color: 'white' }]}
-                                size={22}
-                            />
-                        </TouchableOpacity>
                     </View>
                 </View>
 
