@@ -34,13 +34,20 @@ export default function EmployeeScreen({ navigation }) {
      * Filter State
      * 
      */
-    const [filterName, setFilterName] = useState(null)
+    const [filterName, setFilterName] = useState('')
 
     useEffect(() => {
         loadDataEmployee();
     }, []);
 
-    const loadDataEmployee = async (apiSourceUrl = null, isFilter = false) => {
+    useEffect(() => {
+        const formattedApiSourceUrl = '/employees'
+            + '?name=' + `${filterName}`
+
+        loadDataEmployee(formattedApiSourceUrl)
+    }, [filterName])
+
+    const loadDataEmployee = async (apiSourceUrl = null) => {
         setLoadingPosts(true);
 
         const token = await AsyncStorage.getItem('apiToken')
@@ -63,17 +70,6 @@ export default function EmployeeScreen({ navigation }) {
             });
     };
 
-    const doFilterDate = () => {
-        if (!filterName) {
-            loadDataEmployee('reload')
-        } else {
-            const formattedApiSourceUrl = '/employees'
-                + '?name=' + `${filterName}`
-
-            loadDataEmployee(formattedApiSourceUrl, true)
-        }
-    }
-
     return (
         <SafeAreaView>
             <ScrollView
@@ -84,7 +80,7 @@ export default function EmployeeScreen({ navigation }) {
                             setRefersh(true)
 
                             setFilterName(null)
-                            loadDataEmployee('reload')
+                            loadDataEmployee()
 
                             setRefersh(false)
                         }}
@@ -110,18 +106,6 @@ export default function EmployeeScreen({ navigation }) {
                             value={filterName}
                             onChangeText={text => setFilterName(text)}
                         />
-                    </View>
-                    <View style={[styles.filterButtonWrapper, { flex: 1 }]}>
-                        <TouchableOpacity
-                            onPress={doFilterDate}
-                            style={styles.filterButton}
-                        >
-                            <MaterialCommunityIcons
-                                name="filter-outline"
-                                style={[styles.postIcon, { color: 'white' }]}
-                                size={22}
-                            />
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -153,7 +137,7 @@ export default function EmployeeScreen({ navigation }) {
                                             onPress={() => {
                                                 const splittedUrl = employees.prev_page_url.split('/api/mobile')
 
-                                                loadDataEmployee(splittedUrl[splittedUrl.length - 1])
+                                                loadDataEmployee(splittedUrl[splittedUrl.length - 1] + `&name=${filterName}`)
                                             }}
                                             style={styles.prevNextButton}
                                         >

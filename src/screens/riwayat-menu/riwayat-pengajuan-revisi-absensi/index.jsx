@@ -396,8 +396,11 @@ export default function RiwayatPengajuanRevisiAbsensiScreen() {
                                         <TouchableOpacity
                                             onPress={() => {
                                                 const splittedUrl = arrHistoryPengajuanRevisiAbsen.next_page_url.split('/api/mobile')
+                                                const fixedUrl = splittedUrl[splittedUrl.length - 1]
+                                                    + '&start_date=' + `${filterTanggalStartDate.getFullYear()}-${parseInt(filterTanggalStartDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalStartDate.getMonth() + 1)}` : parseInt(filterTanggalStartDate.getMonth() + 1)}-${parseInt(filterTanggalStartDate.getDate()) < 10 ? `0${parseInt(filterTanggalStartDate.getDate())}` : parseInt(filterTanggalStartDate.getDate())}`
+                                                    + '&end_date=' + `${filterTanggalEndDate.getFullYear()}-${parseInt(filterTanggalEndDate.getMonth() + 1) < 10 ? `0${parseInt(filterTanggalEndDate.getMonth() + 1)}` : parseInt(filterTanggalEndDate.getMonth() + 1)}-${parseInt(filterTanggalEndDate.getDate()) < 10 ? `0${parseInt(filterTanggalEndDate.getDate())}` : parseInt(filterTanggalEndDate.getDate())}`
 
-                                                loadArrHistoryPengajuanRevisiAbsen(splittedUrl[splittedUrl.length - 1])
+                                                loadArrHistoryPengajuanRevisiAbsen(fixedUrl)
                                             }}
                                             style={styles.buttonListTableViewMore}
                                         >
