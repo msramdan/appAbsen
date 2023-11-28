@@ -12,6 +12,7 @@ import { Redirect } from '../../utils/Redirect';
 export default function Photoscreen({ navigation }) {
     const [fullName, setFullname] = useState('')
     const [email, setEmail] = useState('')
+    const [photo, setPhoto] = useState('')
     const [workLocation, setWorkLocation] = useState('')
     const [loading, setLoading] = useState(true)
     const focused = useIsFocused()
@@ -35,6 +36,7 @@ export default function Photoscreen({ navigation }) {
                 setFullname(res.data.data.full_name)
                 setEmail(res.data.data.email)
                 setWorkLocation(res.data.data.work_location)
+                setPhoto(res.data.data.photo)
 
                 setLoading(false)
             }).catch((err) => {
@@ -73,7 +75,7 @@ export default function Photoscreen({ navigation }) {
                         : <></>
                 }
                 <View style={styles.container}>
-                    <Image source={require('../../assets/images/user.png')} style={styles.foto} />
+                    <Image source={photo ? { uri: photo } : require('../../assets/images/user.png')} style={styles.foto} />
                     <View style={styles.profile}>
                         <Text style={styles.nama}>{fullName}</Text>
                         <Text style={styles.desc}>{email}</Text>
@@ -137,7 +139,7 @@ const styles = StyleSheet.create({
     foto: {
         width: 150,
         height: 150,
-        borderRadius: 40,
+        borderRadius: 75,
         alignSelf: 'center',
         marginTop: 55,
     },

@@ -6,7 +6,7 @@ export default function ListEmployee({ employee }) {
             disabled={true}
         >
             <View style={styles.card}>
-                <Image source={require('./../assets/images/user.png')} style={styles.image} />
+                <Image source={employee.photo ? { uri: employee.photo_formatted } : require('./../assets/images/user.png')} style={styles.image} />
                 <View style={styles.employeeDetailWrapper}>
                     <View>
                         <Text style={styles.employeeFullName}>{employee.full_name}</Text>

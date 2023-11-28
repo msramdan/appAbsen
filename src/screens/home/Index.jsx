@@ -417,7 +417,12 @@ export default function HomeScreen({ navigation }) {
             } else {
                 Geolocation.getCurrentPosition(
                     async (position) => {
-                        axiosDoClockIn(position)
+                        if (position.mocked) {
+                            setErrorMessageDoClockIn('Please disable Fake GPS')
+                            setLoadingDoClockIn(false)
+                        } else {
+                            axiosDoClockIn(position)
+                        }
                     })
             }
         });
@@ -478,7 +483,12 @@ export default function HomeScreen({ navigation }) {
             } else {
                 Geolocation.getCurrentPosition(
                     async (position) => {
-                        axiosDoClockOut(position)
+                        if (position.mocked) {
+                            setErrorMessageDoClockOut('Please disable Fake GPS')
+                            setLoadingDoClockOut(false)
+                        } else {
+                            axiosDoClockOut(position)
+                        }
                     })
             }
         });
