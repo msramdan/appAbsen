@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const Axios = axios.create({
-    baseURL: 'https://rms-hexamatics.id/api/mobile',
+    baseURL: 'https://rms.mitrateraakurasi.com/api/mobile',
 })
 
 export default Axios

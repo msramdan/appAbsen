@@ -14,7 +14,6 @@ export default function ListEmployee({ employee }) {
                         <Text style={styles.employeeEmail}>{employee.email}</Text>
                         <View style={{ flexDirection: 'row', marginTop: 5, alignItems: 'center' }}>
                             <Text style={styles.employeeDepartment}>{employee.department.department_name}</Text>
-                            <Text style={[styles.employeeDepartmentType, { backgroundColor: employee.employee_type == 'Expatriate' ? '#0ea5e9' : '#6366f1' }]}>{employee.employee_type}</Text>
                         </View>
                     </View>
                     <Text style={[styles.employeeStatus, { backgroundColor: employee.work_status == 'Active' ? '#22c55e' : '#ef4444' }]}>{employee.work_status}</Text>

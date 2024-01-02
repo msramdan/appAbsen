@@ -1558,11 +1558,14 @@ export default function HomeScreen({ navigation }) {
                         </Text>
                     </View>
                     <View style={styles.headerImageContainer}>
+                    <Text style={styles.mtaText}>PT MTA </Text>
                         <Image
                             source={require('../../assets/images/icon.png')}
                             style={styles.headerLogo}
                         />
+                         
                     </View>
+                    
                 </View>
             </View>
             <View style={styles.headerBorderBottom}></View>
@@ -1846,12 +1849,21 @@ const styles = StyleSheet.create({
 
     headerImageContainer: {
         alignContent: 'center',
+        flexDirection: 'row', // Set the direction to row
         alignItems: 'center',
     },
 
     headerLogo: {
-        width: 60,
-        height: 60,
+        width: 35,
+        height: 40,
+    },
+
+    mtaText: {
+        color: 'white', // Set the desired text color
+        fontSize: 16, // Set the desired font size
+        marginLeft: 8, // Set the desired margin to separate from the image
+        fontWeight: 'bold', // Set the text to bold
+        marginTop: 6,
     },
 
     headerBorderBottom: {
